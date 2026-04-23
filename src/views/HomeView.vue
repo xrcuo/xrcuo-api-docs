@@ -27,10 +27,11 @@ const filteredApis = computed(() => {
 const groupedApis = computed(() => {
   const groups: Record<string, typeof apiEndpoints> = {}
   filteredApis.value.forEach((api) => {
-    if (!groups[api.category]) {
-      groups[api.category] = []
+    const category = api.category
+    if (!groups[category]) {
+      groups[category] = []
     }
-    groups[api.category].push(api)
+    groups[category].push(api)
   })
   return groups
 })
