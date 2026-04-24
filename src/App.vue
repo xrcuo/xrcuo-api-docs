@@ -32,6 +32,7 @@ import { RouterView } from 'vue-router'
         <span class="nav-title">API Docs</span>
       </div>
       <div class="nav-links">
+        <router-link to="/admin" class="nav-link">管理后台</router-link>
         <a href="https://github.com" target="_blank" rel="noopener" class="nav-link">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
             <path

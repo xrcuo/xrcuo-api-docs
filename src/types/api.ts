@@ -51,3 +51,27 @@ export interface ApiEndpoint {
     examples: ApiResponseExample[]
   }[]
 }
+
+export interface ApiDocForm {
+  id?: number
+  name: string
+  path: string
+  method: string
+  description: string
+  category: string
+  tags: string[]
+  parameters: ApiParameter[]
+  headers: ApiHeader[]
+  requestBody?: {
+    contentType: string
+    description: string
+    schema: ApiParameter[]
+    example: string
+  }
+  responses: {
+    statusCode: number
+    description: string
+    schema?: ApiResponseSchema[]
+    examples: ApiResponseExample[]
+  }[]
+}

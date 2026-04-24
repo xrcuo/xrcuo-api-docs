@@ -1,16 +1,60 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { apiEndpoints, categories } from '@/data/apiData'
+import { ref, computed, onMounted } from 'vue'
+import { apiDocApi } from '@/api/client'
 import ApiCard from '@/components/ApiCard.vue'
+import type { ApiEndpoint } from '@/types/api'
 
 const searchQuery = ref('')
 const selectedCategory = ref('全部')
 const selectedMethod = ref('全部')
+const apiEndpoints = ref<ApiEndpoint[]>([])
+const loading = ref(false)
 
 const methods = ['全部', 'GET', 'POST', 'PUT', 'DELETE', 'PATCH']
 
+onMounted(async () => {
+  await loadApiDocs()
+})
+
+async function loadApiDocs() {
+  loading.value = true
+  try {
+    const data = await apiDocApi.list()
+    apiEndpoints.value = data.map((item: any) => ({
+      id: String(item.id),
+      name: item.name,
+      path: item.path,
+      method: item.method,
+      description: item.description,
+      category: item.category,
+      tags: safeParse(item.tags, []),
+      parameters: safeParse(item.parameters, []),
+      headers: safeParse(item.headers, []),
+      requestBody: item.request_body ? safeParse(item.request_body, undefined) : undefined,
+      responses: safeParse(item.responses, [])
+    }))
+  } catch (e) {
+    console.error('加载API文档失败', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+function safeParse(json: string, fallback: any) {
+  try {
+    return JSON.parse(json)
+  } catch {
+    return fallback
+  }
+}
+
+const categories = computed(() => {
+  const cats = [...new Set(apiEndpoints.value.map((api) => api.category))]
+  return cats
+})
+
 const filteredApis = computed(() => {
-  return apiEndpoints.filter((api) => {
+  return apiEndpoints.value.filter((api) => {
     const matchCategory = selectedCategory.value === '全部' || api.category === selectedCategory.value
     const matchMethod = selectedMethod.value === '全部' || api.method === selectedMethod.value
     const matchSearch =
@@ -25,7 +69,7 @@ const filteredApis = computed(() => {
 })
 
 const groupedApis = computed(() => {
-  const groups: Record<string, typeof apiEndpoints> = {}
+  const groups: Record<string, ApiEndpoint[]> = {}
   filteredApis.value.forEach((api) => {
     const category = api.category
     if (!groups[category]) {
@@ -75,7 +119,14 @@ const groupedApis = computed(() => {
           <label>分类</label>
           <div class="filter-options">
             <button
-              v-for="cat in ['全部', ...categories]"
+              class="filter-btn"
+              :class="{ active: selectedCategory === '全部' }"
+              @click="selectedCategory = '全部'"
+            >
+              全部
+            </button>
+            <button
+              v-for="cat in categories"
               :key="cat"
               class="filter-btn"
               :class="{ active: selectedCategory === cat }"
@@ -105,6 +156,7 @@ const groupedApis = computed(() => {
 
     <div class="results-info">
       共 <strong>{{ filteredApis.length }}</strong> 个接口
+      <span v-if="loading" class="loading-text">（加载中...）</span>
     </div>
 
     <div class="api-list">
@@ -114,6 +166,10 @@ const groupedApis = computed(() => {
           <ApiCard v-for="api in apis" :key="api.id" :api="api" />
         </div>
       </template>
+      <div v-else-if="loading" class="empty-state">
+        <div class="empty-icon">⏳</div>
+        <p>正在加载 API 文档...</p>
+      </div>
       <div v-else class="empty-state">
         <div class="empty-icon">🔍</div>
         <p>未找到匹配的接口</p>
@@ -255,6 +311,11 @@ const groupedApis = computed(() => {
 
 .results-info strong {
   color: #4a90d9;
+}
+
+.loading-text {
+  color: #999;
+  font-size: 13px;
 }
 
 .category-group {
