@@ -184,6 +184,10 @@ function logout() {
   authStore.logout()
   router.push('/login')
 }
+
+function goToMonitor() {
+  router.push('/monitor')
+}
 </script>
 
 <template>
@@ -207,6 +211,9 @@ function logout() {
           @click="activeTab = 'password'"
         >
           修改密码
+        </button>
+        <button class="nav-item monitor" @click="goToMonitor">
+          系统监控
         </button>
       </nav>
       <button class="btn-logout" @click="logout">退出登录</button>
@@ -325,6 +332,15 @@ function logout() {
   background: rgba(102, 126, 234, 0.2);
   color: #667eea;
   border-left: 3px solid #667eea;
+}
+
+.nav-item.monitor {
+  color: #4caf50;
+}
+
+.nav-item.monitor:hover {
+  background: rgba(76, 175, 80, 0.1);
+  color: #66bb6a;
 }
 
 .btn-logout {

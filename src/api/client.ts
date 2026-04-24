@@ -101,3 +101,29 @@ export const configApi = {
 
   list: () => request<ConfigItem[]>('/admin/configs'),
 }
+
+export interface SystemMetrics {
+  timestamp: number
+  cpu: {
+    total_percent: number
+    core_percents: number[]
+    core_count: number
+  }
+  memory: {
+    total: number
+    used: number
+    free: number
+    used_percent: number
+  }
+  network: {
+    upload_speed: number
+    download_speed: number
+    total_sent: number
+    total_recv: number
+  }
+}
+
+export const monitorApi = {
+  getCurrent: () => request<SystemMetrics>('/admin/metrics'),
+  getHistory: () => request<SystemMetrics[]>('/admin/metrics/history'),
+}
