@@ -45,9 +45,9 @@ function createEmptyDoc(): ApiDocForm {
       contentType: 'application/json',
       description: '',
       schema: [],
-      example: ''
+      example: '',
     },
-    responses: []
+    responses: [],
   }
 }
 
@@ -56,7 +56,7 @@ async function loadDocs() {
   error.value = ''
   try {
     const data = await apiDocApi.list()
-    docs.value = data.map((item: any) => ({
+    docs.value = data.map((item) => ({
       id: String(item.id),
       name: item.name,
       path: item.path,
@@ -66,12 +66,17 @@ async function loadDocs() {
       tags: safeParse(item.tags, []),
       parameters: safeParse(item.parameters, []),
       headers: safeParse(item.headers, []),
-      requestBody: item.request_body ? safeParse(item.request_body, undefined) : undefined,
-      responses: safeParse(item.responses, [])
+      requestBody: item.requestBody ? safeParse(item.requestBody, undefined) : undefined,
+      responses: safeParse(item.responses, []),
     }))
-  } catch (e: any) {
-    error.value = e.message || '加载失败'
-    if (e.code === 401) {
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : '加载失败'
+    if (
+      typeof e === 'object' &&
+      e !== null &&
+      'code' in e &&
+      (e as { code: number }).code === 401
+    ) {
       authStore.logout()
       router.push('/login')
     }
@@ -80,9 +85,9 @@ async function loadDocs() {
   }
 }
 
-function safeParse(json: string, fallback: any) {
+function safeParse<T>(json: string, fallback: T): T {
   try {
-    return JSON.parse(json)
+    return JSON.parse(json) as T
   } catch {
     return fallback
   }
@@ -105,7 +110,7 @@ function openEdit(doc: ApiEndpoint) {
     parameters: doc.parameters ? JSON.parse(JSON.stringify(doc.parameters)) : [],
     headers: doc.headers ? JSON.parse(JSON.stringify(doc.headers)) : [],
     requestBody: doc.requestBody ? JSON.parse(JSON.stringify(doc.requestBody)) : undefined,
-    responses: doc.responses ? JSON.parse(JSON.stringify(doc.responses)) : []
+    responses: doc.responses ? JSON.parse(JSON.stringify(doc.responses)) : [],
   }
   showEditor.value = true
 }
@@ -123,7 +128,7 @@ async function handleSave() {
       parameters: editingDoc.value.parameters,
       headers: editingDoc.value.headers,
       requestBody: editingDoc.value.requestBody,
-      responses: editingDoc.value.responses
+      responses: editingDoc.value.responses,
     }
     if (editingDoc.value.id) {
       await apiDocApi.update(payload)
@@ -132,8 +137,8 @@ async function handleSave() {
     }
     showEditor.value = false
     await loadDocs()
-  } catch (e: any) {
-    alert('保存失败: ' + (e.message || '未知错误'))
+  } catch (e: unknown) {
+    alert('保存失败: ' + (e instanceof Error ? e.message : '未知错误'))
   }
 }
 
@@ -142,8 +147,8 @@ async function handleDelete(id: string) {
   try {
     await apiDocApi.delete(Number(id))
     await loadDocs()
-  } catch (e: any) {
-    alert('删除失败: ' + (e.message || '未知错误'))
+  } catch (e: unknown) {
+    alert('删除失败: ' + (e instanceof Error ? e.message : '未知错误'))
   }
 }
 
@@ -170,8 +175,8 @@ async function handleChangePassword() {
     oldPassword.value = ''
     newPassword.value = ''
     confirmPassword.value = ''
-  } catch (e: any) {
-    passwordError.value = e.message || '修改失败'
+  } catch (e: unknown) {
+    passwordError.value = e instanceof Error ? e.message : '修改失败'
   }
 }
 

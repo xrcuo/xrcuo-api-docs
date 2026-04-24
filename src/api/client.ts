@@ -1,4 +1,16 @@
+import type { ApiEndpoint, ApiDocForm } from '@/types/api'
+
 const BASE_URL = ''
+
+interface ApiResponse<T> {
+  code: number
+  msg: string
+  data: T
+}
+
+interface ApiError extends Error {
+  code: number
+}
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const token = localStorage.getItem('admin_token')
@@ -11,15 +23,15 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
     ...options,
     headers: {
       ...headers,
-      ...(options?.headers || {}),
+      ...options?.headers,
     },
   })
 
-  const data = await response.json()
+  const data = (await response.json()) as ApiResponse<T>
 
   if (!response.ok || data.code !== 200) {
-    const error = new Error(data.msg || '请求失败')
-    ;(error as any).code = data.code
+    const error = new Error(data.msg || '请求失败') as ApiError
+    error.code = data.code
     throw error
   }
 
@@ -48,19 +60,19 @@ export const apiDocApi = {
     if (params?.category) searchParams.append('category', params.category)
     if (params?.method) searchParams.append('method', params.method)
     if (params?.keyword) searchParams.append('keyword', params.keyword)
-    return request<any[]>(`/admin/api-docs?${searchParams.toString()}`)
+    return request<ApiEndpoint[]>(`/admin/api-docs?${searchParams.toString()}`)
   },
 
-  get: (id: number) => request<any>(`/admin/api-docs/${id}`),
+  get: (id: number) => request<ApiEndpoint>(`/admin/api-docs/${id}`),
 
-  create: (data: any) =>
-    request<any>('/admin/api-docs', {
+  create: (data: ApiDocForm) =>
+    request<ApiEndpoint>('/admin/api-docs', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  update: (data: any) =>
-    request<any>('/admin/api-docs', {
+  update: (data: ApiDocForm) =>
+    request<ApiEndpoint>('/admin/api-docs', {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
@@ -73,8 +85,13 @@ export const apiDocApi = {
   categories: () => request<string[]>('/admin/api-docs/categories'),
 }
 
+interface ConfigItem {
+  key: string
+  value: string
+}
+
 export const configApi = {
-  get: (key: string) => request<{ key: string; value: string }>(`/admin/config?key=${key}`),
+  get: (key: string) => request<ConfigItem>(`/admin/config?key=${key}`),
 
   set: (key: string, value: string) =>
     request<null>('/admin/config', {
@@ -82,5 +99,5 @@ export const configApi = {
       body: JSON.stringify({ key, value }),
     }),
 
-  list: () => request<any[]>('/admin/configs'),
+  list: () => request<ConfigItem[]>('/admin/configs'),
 }

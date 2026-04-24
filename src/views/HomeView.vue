@@ -20,7 +20,7 @@ async function loadApiDocs() {
   loading.value = true
   try {
     const data = await apiDocApi.list()
-    apiEndpoints.value = data.map((item: any) => ({
+    apiEndpoints.value = data.map((item) => ({
       id: String(item.id),
       name: item.name,
       path: item.path,
@@ -30,8 +30,8 @@ async function loadApiDocs() {
       tags: safeParse(item.tags, []),
       parameters: safeParse(item.parameters, []),
       headers: safeParse(item.headers, []),
-      requestBody: item.request_body ? safeParse(item.request_body, undefined) : undefined,
-      responses: safeParse(item.responses, [])
+      requestBody: item.requestBody ? safeParse(item.requestBody, undefined) : undefined,
+      responses: safeParse(item.responses, []),
     }))
   } catch (e) {
     console.error('加载API文档失败', e)
@@ -40,9 +40,9 @@ async function loadApiDocs() {
   }
 }
 
-function safeParse(json: string, fallback: any) {
+function safeParse<T>(json: string, fallback: T): T {
   try {
-    return JSON.parse(json)
+    return JSON.parse(json) as T
   } catch {
     return fallback
   }
@@ -55,7 +55,8 @@ const categories = computed(() => {
 
 const filteredApis = computed(() => {
   return apiEndpoints.value.filter((api) => {
-    const matchCategory = selectedCategory.value === '全部' || api.category === selectedCategory.value
+    const matchCategory =
+      selectedCategory.value === '全部' || api.category === selectedCategory.value
     const matchMethod = selectedMethod.value === '全部' || api.method === selectedMethod.value
     const matchSearch =
       searchQuery.value === '' ||

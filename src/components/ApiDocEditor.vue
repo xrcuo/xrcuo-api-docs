@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { ApiDocForm, ApiParameter, ApiHeader, ApiResponseSchema, ApiResponseExample } from '@/types/api'
+import type { ApiDocForm } from '@/types/api'
 
 const props = defineProps<{
   modelValue: ApiDocForm
@@ -8,21 +8,27 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [value: ApiDocForm]
-  'submit': []
-  'cancel': []
+  submit: []
+  cancel: []
 }>()
 
 const methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
 
 const form = computed({
   get: () => props.modelValue,
-  set: (val) => emit('update:modelValue', val)
+  set: (val) => emit('update:modelValue', val),
 })
 
 const activeSection = ref<'basic' | 'params' | 'headers' | 'body' | 'responses'>('basic')
 
 function addParameter() {
-  form.value.parameters.push({ name: '', type: 'string', required: true, description: '', example: '' })
+  form.value.parameters.push({
+    name: '',
+    type: 'string',
+    required: true,
+    description: '',
+    example: '',
+  })
 }
 
 function removeParameter(index: number) {
@@ -42,7 +48,7 @@ function addResponse() {
     statusCode: 200,
     description: '',
     schema: [],
-    examples: []
+    examples: [],
   })
 }
 
@@ -52,7 +58,12 @@ function removeResponse(index: number) {
 
 function addResponseSchema(respIndex: number) {
   form.value.responses[respIndex].schema = form.value.responses[respIndex].schema || []
-  form.value.responses[respIndex].schema!.push({ field: '', type: 'string', description: '', required: true })
+  form.value.responses[respIndex].schema!.push({
+    field: '',
+    type: 'string',
+    description: '',
+    required: true,
+  })
 }
 
 function removeResponseSchema(respIndex: number, schemaIndex: number) {
@@ -60,7 +71,12 @@ function removeResponseSchema(respIndex: number, schemaIndex: number) {
 }
 
 function addResponseExample(respIndex: number) {
-  form.value.responses[respIndex].examples.push({ statusCode: 200, description: '', contentType: 'application/json', body: '' })
+  form.value.responses[respIndex].examples.push({
+    statusCode: 200,
+    description: '',
+    contentType: 'application/json',
+    body: '',
+  })
 }
 
 function removeResponseExample(respIndex: number, exIndex: number) {
@@ -95,7 +111,15 @@ function removeTag(index: number) {
           :class="{ active: activeSection === section }"
           @click="activeSection = section"
         >
-          {{ { basic: '基本信息', params: '请求参数', headers: '请求头', body: '请求体', responses: '响应' }[section] }}
+          {{
+            {
+              basic: '基本信息',
+              params: '请求参数',
+              headers: '请求头',
+              body: '请求体',
+              responses: '响应',
+            }[section]
+          }}
         </button>
       </div>
 
@@ -127,7 +151,12 @@ function removeTag(index: number) {
 
           <div class="form-group">
             <label>描述</label>
-            <textarea v-model="form.description" class="form-input" rows="3" placeholder="接口功能描述..."></textarea>
+            <textarea
+              v-model="form.description"
+              class="form-input"
+              rows="3"
+              placeholder="接口功能描述..."
+            ></textarea>
           </div>
 
           <div class="form-group">
@@ -193,15 +222,28 @@ function removeTag(index: number) {
         <div v-if="activeSection === 'body'" class="section">
           <div class="form-group">
             <label>Content-Type</label>
-            <input v-model="form.requestBody!.contentType" class="form-input" placeholder="application/json" />
+            <input
+              v-model="form.requestBody!.contentType"
+              class="form-input"
+              placeholder="application/json"
+            />
           </div>
           <div class="form-group">
             <label>描述</label>
-            <input v-model="form.requestBody!.description" class="form-input" placeholder="请求体描述" />
+            <input
+              v-model="form.requestBody!.description"
+              class="form-input"
+              placeholder="请求体描述"
+            />
           </div>
           <div class="form-group">
             <label>请求示例</label>
-            <textarea v-model="form.requestBody!.example" class="form-input code" rows="6" placeholder="JSON 示例..."></textarea>
+            <textarea
+              v-model="form.requestBody!.example"
+              class="form-input code"
+              rows="6"
+              placeholder="JSON 示例..."
+            ></textarea>
           </div>
         </div>
 
@@ -213,7 +255,11 @@ function removeTag(index: number) {
           </div>
           <div v-for="(resp, ri) in form.responses" :key="ri" class="response-card">
             <div class="response-header">
-              <input v-model.number="resp.statusCode" class="form-input tiny" placeholder="状态码" />
+              <input
+                v-model.number="resp.statusCode"
+                class="form-input tiny"
+                placeholder="状态码"
+              />
               <input v-model="resp.description" class="form-input flex-1" placeholder="描述" />
               <button class="btn-remove" @click="removeResponse(ri)">&times;</button>
             </div>
@@ -244,12 +290,26 @@ function removeTag(index: number) {
               <button class="btn-add small" @click="addResponseExample(ri)">+ 添加示例</button>
               <div v-for="(ex, ei) in resp.examples" :key="ei" class="example-card">
                 <div class="example-header">
-                  <input v-model="ex.statusCode" class="form-input tiny" placeholder="状态码" disabled />
+                  <input
+                    v-model="ex.statusCode"
+                    class="form-input tiny"
+                    placeholder="状态码"
+                    disabled
+                  />
                   <input v-model="ex.description" class="form-input small" placeholder="描述" />
-                  <input v-model="ex.contentType" class="form-input small" placeholder="Content-Type" />
+                  <input
+                    v-model="ex.contentType"
+                    class="form-input small"
+                    placeholder="Content-Type"
+                  />
                   <button class="btn-remove" @click="removeResponseExample(ri, ei)">&times;</button>
                 </div>
-                <textarea v-model="ex.body" class="form-input code" rows="4" placeholder="响应体 JSON..."></textarea>
+                <textarea
+                  v-model="ex.body"
+                  class="form-input code"
+                  rows="4"
+                  placeholder="响应体 JSON..."
+                ></textarea>
               </div>
             </div>
           </div>

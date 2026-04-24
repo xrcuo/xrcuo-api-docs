@@ -5,7 +5,7 @@ import MethodBadge from './MethodBadge.vue'
 import ApiDetail from './ApiDetail.vue'
 import ResponseModal from './ResponseModal.vue'
 
-const props = defineProps<{
+defineProps<{
   api: ApiEndpoint
 }>()
 
@@ -34,9 +34,7 @@ const closeResponse = () => {
         <span class="api-name">{{ api.name }}</span>
       </div>
       <div class="api-actions">
-        <button class="btn-response" @click.stop="openResponse">
-          查看返回信息
-        </button>
+        <button class="btn-response" @click.stop="openResponse">查看返回信息</button>
         <span class="toggle-icon" :class="{ expanded: showDetail }">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path
