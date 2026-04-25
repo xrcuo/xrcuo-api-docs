@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { monitorApi, type SystemMetrics } from '@/api/client'
@@ -10,10 +10,10 @@ const authStore = useAuthStore()
 
 const currentMetrics = ref<SystemMetrics | null>(null)
 const historyData = ref<SystemMetrics[]>([])
-const loading = ref(false)
 const error = ref('')
 const lastUpdate = ref('')
 const isExpanded = ref(false)
+const isRefreshing = ref(false)
 
 const cpuThreshold = ref(80)
 const memThreshold = ref(85)
@@ -65,7 +65,7 @@ onMounted(async () => {
     return
   }
   await loadData()
-  refreshTimer = setInterval(loadData, 5000)
+  refreshTimer = setInterval(loadData, 2000)
 })
 
 onUnmounted(() => {
@@ -85,8 +85,9 @@ function destroyCharts() {
 }
 
 async function loadData() {
+  if (isRefreshing.value) return
+  isRefreshing.value = true
   try {
-    loading.value = true
     error.value = ''
     const [current, history] = await Promise.all([
       monitorApi.getCurrent(),
@@ -96,6 +97,7 @@ async function loadData() {
     historyData.value = history
     lastUpdate.value = new Date().toLocaleTimeString('zh-CN')
     if (isExpanded.value) {
+      await nextTick()
       updateCharts()
     }
   } catch (e: unknown) {
@@ -110,14 +112,14 @@ async function loadData() {
       router.push('/login')
     }
   } finally {
-    loading.value = false
+    isRefreshing.value = false
   }
 }
 
 function toggleExpand() {
   isExpanded.value = !isExpanded.value
   if (isExpanded.value) {
-    setTimeout(() => updateCharts(), 100)
+    nextTick(() => updateCharts())
   }
 }
 
@@ -164,6 +166,7 @@ function initCpuChart(labels: string[], data: number[]) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      animation: { duration: 0 },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -225,6 +228,7 @@ function initMemChart(labels: string[], data: number[]) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      animation: { duration: 0 },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -297,6 +301,7 @@ function initNetChart(labels: string[], upload: number[], download: number[]) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      animation: { duration: 0 },
       plugins: {
         legend: {
           position: 'top',
@@ -362,7 +367,7 @@ function initNetChart(labels: string[], upload: number[], download: number[]) {
       </div>
     </div>
 
-    <div v-if="isExpanded" class="monitor-content">
+    <div v-show="isExpanded" class="monitor-content">
       <div v-if="error" class="error-banner">{{ error }}</div>
 
       <div class="metrics-overview">
@@ -410,7 +415,7 @@ function initNetChart(labels: string[], upload: number[], download: number[]) {
           </div>
           <div class="overview-info">
             <span class="overview-label">网络流量</span>
-            <span class="overview-value">{{ formatSpeed(currentMetrics?.network.upload_speed ?? 0 + currentMetrics?.network.download_speed ?? 0) }}</span>
+            <span class="overview-value">{{ formatSpeed((currentMetrics?.network.upload_speed ?? 0) + (currentMetrics?.network.download_speed ?? 0)) }}</span>
           </div>
           <div v-if="netAlert" class="overview-alert">告警</div>
         </div>
@@ -540,9 +545,9 @@ function initNetChart(labels: string[], upload: number[], download: number[]) {
         </div>
       </div>
 
-      <div v-if="loading" class="loading-overlay">
-        <div class="loading-spinner"></div>
-        <span>更新中...</span>
+      <div class="refresh-indicator" :class="{ active: isRefreshing }">
+        <div class="refresh-dot"></div>
+        <span>实时更新中</span>
       </div>
     </div>
   </div>
@@ -675,12 +680,6 @@ function initNetChart(labels: string[], upload: number[], download: number[]) {
 
 .monitor-content {
   padding: 0 20px 20px;
-  animation: slideDown 0.3s ease;
-}
-
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 .error-banner {
@@ -1025,37 +1024,34 @@ function initNetChart(labels: string[], upload: number[], download: number[]) {
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.9);
+.refresh-indicator {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  border-radius: 12px;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 8px;
+  font-size: 12px;
+  color: #999;
+  transition: opacity 0.3s;
+  opacity: 0;
 }
 
-.loading-spinner {
-  width: 24px;
-  height: 24px;
-  border: 2px solid #e0e0e0;
-  border-top-color: #667eea;
+.refresh-indicator.active {
+  opacity: 1;
+}
+
+.refresh-dot {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  background: #43a047;
+  animation: pulse 1s infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.loading-overlay span {
-  font-size: 13px;
-  color: #888;
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
 
 @media (max-width: 768px) {
