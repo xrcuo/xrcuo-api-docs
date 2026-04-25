@@ -4,12 +4,13 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { apiDocApi } from '@/api/client'
 import ApiDocEditor from '@/components/ApiDocEditor.vue'
+import SystemMonitor from '@/components/SystemMonitor.vue'
 import type { ApiDocForm, ApiEndpoint } from '@/types/api'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
-const activeTab = ref<'docs' | 'password'>('docs')
+const activeTab = ref<'docs' | 'monitor' | 'password'>('docs')
 const docs = ref<ApiEndpoint[]>([])
 const loading = ref(false)
 const error = ref('')
@@ -184,17 +185,20 @@ function logout() {
   authStore.logout()
   router.push('/login')
 }
-
-function goToMonitor() {
-  router.push('/monitor')
-}
 </script>
 
 <template>
   <div class="admin-page">
     <aside class="admin-sidebar">
       <div class="sidebar-header">
-        <h2>管理后台</h2>
+        <div class="logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+          <h2>管理后台</h2>
+        </div>
         <span class="user-info">{{ authStore.username }}</span>
       </div>
       <nav class="sidebar-nav">
@@ -203,31 +207,68 @@ function goToMonitor() {
           :class="{ active: activeTab === 'docs' }"
           @click="activeTab = 'docs'"
         >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
           API 文档管理
+        </button>
+        <button
+          class="nav-item"
+          :class="{ active: activeTab === 'monitor' }"
+          @click="activeTab = 'monitor'"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+          系统监控
         </button>
         <button
           class="nav-item"
           :class="{ active: activeTab === 'password' }"
           @click="activeTab = 'password'"
         >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
           修改密码
         </button>
-        <button class="nav-item monitor" @click="goToMonitor">
-          系统监控
-        </button>
       </nav>
-      <button class="btn-logout" @click="logout">退出登录</button>
+      <button class="btn-logout" @click="logout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        退出登录
+      </button>
     </aside>
 
     <main class="admin-main">
       <div v-if="activeTab === 'docs'" class="tab-content">
         <div class="tab-header">
-          <h2>API 文档列表</h2>
-          <button class="btn-create" @click="openCreate">+ 新建文档</button>
+          <div class="header-title">
+            <h2>API 文档列表</h2>
+            <p class="header-desc">管理系统 API 接口文档</p>
+          </div>
+          <button class="btn-create" @click="openCreate">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            新建文档
+          </button>
         </div>
 
-        <div v-if="loading" class="loading">加载中...</div>
-        <div v-else-if="error" class="error">{{ error }}</div>
+        <div v-if="loading" class="loading-state">
+          <div class="loading-spinner"></div>
+          <span>加载中...</span>
+        </div>
+        <div v-else-if="error" class="error-state">{{ error }}</div>
         <div v-else class="doc-list">
           <div v-for="doc in docs" :key="doc.id" class="doc-item">
             <div class="doc-main">
@@ -237,32 +278,61 @@ function goToMonitor() {
               <span class="doc-category">{{ doc.category }}</span>
             </div>
             <div class="doc-actions">
-              <button class="btn-action edit" @click="openEdit(doc)">编辑</button>
-              <button class="btn-action delete" @click="handleDelete(doc.id)">删除</button>
+              <button class="btn-action edit" @click="openEdit(doc)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                编辑
+              </button>
+              <button class="btn-action delete" @click="handleDelete(doc.id)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+                删除
+              </button>
             </div>
           </div>
         </div>
       </div>
 
+      <div v-if="activeTab === 'monitor'" class="tab-content">
+        <div class="tab-header">
+          <div class="header-title">
+            <h2>系统监控</h2>
+            <p class="header-desc">实时监控系统资源使用情况</p>
+          </div>
+        </div>
+        <SystemMonitor />
+      </div>
+
       <div v-if="activeTab === 'password'" class="tab-content">
-        <h2>修改密码</h2>
-        <form class="password-form" @submit.prevent="handleChangePassword">
-          <div class="form-group">
-            <label>原密码</label>
-            <input v-model="oldPassword" type="password" class="form-input" />
+        <div class="tab-header">
+          <div class="header-title">
+            <h2>修改密码</h2>
+            <p class="header-desc">更新您的登录密码</p>
           </div>
-          <div class="form-group">
-            <label>新密码</label>
-            <input v-model="newPassword" type="password" class="form-input" />
-          </div>
-          <div class="form-group">
-            <label>确认新密码</label>
-            <input v-model="confirmPassword" type="password" class="form-input" />
-          </div>
-          <div v-if="passwordError" class="error-msg">{{ passwordError }}</div>
-          <div v-if="passwordSuccess" class="success-msg">{{ passwordSuccess }}</div>
-          <button type="submit" class="btn-submit">修改密码</button>
-        </form>
+        </div>
+        <div class="password-card">
+          <form class="password-form" @submit.prevent="handleChangePassword">
+            <div class="form-group">
+              <label>原密码</label>
+              <input v-model="oldPassword" type="password" class="form-input" placeholder="请输入原密码" />
+            </div>
+            <div class="form-group">
+              <label>新密码</label>
+              <input v-model="newPassword" type="password" class="form-input" placeholder="请输入新密码（至少6位）" />
+            </div>
+            <div class="form-group">
+              <label>确认新密码</label>
+              <input v-model="confirmPassword" type="password" class="form-input" placeholder="请再次输入新密码" />
+            </div>
+            <div v-if="passwordError" class="error-msg">{{ passwordError }}</div>
+            <div v-if="passwordSuccess" class="success-msg">{{ passwordSuccess }}</div>
+            <button type="submit" class="btn-submit">修改密码</button>
+          </form>
+        </div>
       </div>
     </main>
 
@@ -282,123 +352,199 @@ function goToMonitor() {
 }
 
 .admin-sidebar {
-  width: 240px;
-  background: #1a1a2e;
+  width: 260px;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
   color: #fff;
   display: flex;
   flex-direction: column;
-  padding: 20px 0;
+  padding: 24px 0;
+  position: fixed;
+  height: 100vh;
+  left: 0;
+  top: 0;
+  z-index: 100;
 }
 
 .sidebar-header {
-  padding: 0 20px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0 24px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.sidebar-header h2 {
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.logo svg {
+  width: 28px;
+  height: 28px;
+  color: #667eea;
+}
+
+.logo h2 {
   font-size: 18px;
-  margin-bottom: 4px;
+  font-weight: 700;
+  margin: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .user-info {
   font-size: 13px;
-  color: #aaa;
+  color: rgba(255, 255, 255, 0.5);
+  padding-left: 40px;
 }
 
 .sidebar-nav {
   flex: 1;
-  padding: 16px 0;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .nav-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   width: 100%;
-  padding: 12px 20px;
+  padding: 12px 16px;
   background: transparent;
   border: none;
-  color: #ccc;
+  color: rgba(255, 255, 255, 0.6);
   text-align: left;
   cursor: pointer;
   font-size: 14px;
+  border-radius: 10px;
   transition: all 0.2s;
+}
+
+.nav-item svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .nav-item:hover {
   background: rgba(255, 255, 255, 0.05);
-  color: #fff;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .nav-item.active {
-  background: rgba(102, 126, 234, 0.2);
+  background: rgba(102, 126, 234, 0.15);
   color: #667eea;
-  border-left: 3px solid #667eea;
-}
-
-.nav-item.monitor {
-  color: #4caf50;
-}
-
-.nav-item.monitor:hover {
-  background: rgba(76, 175, 80, 0.1);
-  color: #66bb6a;
 }
 
 .btn-logout {
-  margin: 0 16px 16px;
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
+  margin: 0 20px 20px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btn-logout svg {
+  width: 16px;
+  height: 16px;
 }
 
 .btn-logout:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .admin-main {
   flex: 1;
+  margin-left: 260px;
   padding: 32px;
   background: #f5f7fa;
+  min-height: 100vh;
 }
 
 .tab-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-.tab-header h2 {
-  font-size: 20px;
+.header-title h2 {
+  font-size: 22px;
+  margin: 0 0 4px;
+  color: #1a1a2e;
+}
+
+.header-desc {
+  font-size: 13px;
+  color: #888;
   margin: 0;
-  color: #333;
 }
 
 .btn-create {
-  padding: 8px 16px;
-  background: #667eea;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #fff;
   border: none;
-  border-radius: 6px;
-  font-size: 13px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-create svg {
+  width: 16px;
+  height: 16px;
 }
 
 .btn-create:hover {
-  background: #5a6fd6;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
-.loading,
-.error {
-  padding: 40px;
+.loading-state,
+.error-state {
+  padding: 60px;
   text-align: center;
   color: #888;
+  background: #fff;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
 
-.error {
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-state {
   color: #e53935;
 }
 
@@ -412,31 +558,32 @@ function goToMonitor() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
+  padding: 16px 20px;
   background: #fff;
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid #e8e8e8;
-  transition: box-shadow 0.2s;
+  transition: all 0.2s;
 }
 
 .doc-item:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
 }
 
 .doc-main {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   flex: 1;
   min-width: 0;
 }
 
 .method-badge {
-  padding: 3px 8px;
-  border-radius: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
   font-size: 11px;
   font-weight: 700;
-  min-width: 48px;
+  min-width: 52px;
   text-align: center;
 }
 
@@ -466,9 +613,12 @@ function goToMonitor() {
 }
 
 .doc-path {
-  font-family: monospace;
+  font-family: 'SF Mono', monospace;
   font-size: 13px;
   color: #555;
+  background: #f5f5f5;
+  padding: 4px 10px;
+  border-radius: 6px;
 }
 
 .doc-name {
@@ -478,14 +628,15 @@ function goToMonitor() {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-weight: 500;
 }
 
 .doc-category {
   font-size: 12px;
   color: #888;
-  padding: 2px 8px;
-  background: #f0f0f0;
-  border-radius: 4px;
+  padding: 4px 12px;
+  background: #f5f5f5;
+  border-radius: 20px;
   white-space: nowrap;
 }
 
@@ -496,11 +647,21 @@ function goToMonitor() {
 }
 
 .btn-action {
-  padding: 5px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
   border: none;
-  border-radius: 4px;
-  font-size: 12px;
+  border-radius: 8px;
+  font-size: 13px;
   cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.btn-action svg {
+  width: 14px;
+  height: 14px;
 }
 
 .btn-action.edit {
@@ -508,22 +669,37 @@ function goToMonitor() {
   color: #1976d2;
 }
 
+.btn-action.edit:hover {
+  background: #bbdefb;
+}
+
 .btn-action.delete {
   background: #ffebee;
   color: #c62828;
 }
 
+.btn-action.delete:hover {
+  background: #ffcdd2;
+}
+
+.password-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 32px;
+  border: 1px solid #e8e8e8;
+  max-width: 480px;
+}
+
 .password-form {
-  max-width: 400px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .form-group label {
@@ -533,38 +709,79 @@ function goToMonitor() {
 }
 
 .form-input {
-  padding: 10px 14px;
+  padding: 12px 16px;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 14px;
+  transition: all 0.2s;
+  background: #fafafa;
 }
 
 .form-input:focus {
   outline: none;
   border-color: #667eea;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .error-msg {
   color: #e53935;
   font-size: 13px;
+  padding: 8px 12px;
+  background: #ffebee;
+  border-radius: 8px;
 }
 
 .success-msg {
   color: #43a047;
   font-size: 13px;
+  padding: 8px 12px;
+  background: #e8f5e9;
+  border-radius: 8px;
 }
 
 .btn-submit {
-  padding: 12px;
-  background: #667eea;
+  padding: 14px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .btn-submit:hover {
-  background: #5a6fd6;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+@media (max-width: 768px) {
+  .admin-sidebar {
+    width: 100%;
+    position: relative;
+    height: auto;
+  }
+
+  .admin-main {
+    margin-left: 0;
+  }
+
+  .admin-page {
+    flex-direction: column;
+  }
+
+  .doc-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .doc-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 </style>
