@@ -57,8 +57,10 @@ function removeResponse(index: number) {
 }
 
 function addResponseSchema(respIndex: number) {
-  form.value.responses[respIndex].schema = form.value.responses[respIndex].schema || []
-  form.value.responses[respIndex].schema!.push({
+  const resp = form.value.responses[respIndex]
+  if (!resp) return
+  resp.schema = resp.schema || []
+  resp.schema.push({
     field: '',
     type: 'string',
     description: '',
@@ -67,11 +69,17 @@ function addResponseSchema(respIndex: number) {
 }
 
 function removeResponseSchema(respIndex: number, schemaIndex: number) {
-  form.value.responses[respIndex].schema!.splice(schemaIndex, 1)
+  const resp = form.value.responses[respIndex]
+  if (!resp) return
+  if (resp.schema) {
+    resp.schema.splice(schemaIndex, 1)
+  }
 }
 
 function addResponseExample(respIndex: number) {
-  form.value.responses[respIndex].examples.push({
+  const resp = form.value.responses[respIndex]
+  if (!resp) return
+  resp.examples.push({
     statusCode: 200,
     description: '',
     contentType: 'application/json',
@@ -80,7 +88,9 @@ function addResponseExample(respIndex: number) {
 }
 
 function removeResponseExample(respIndex: number, exIndex: number) {
-  form.value.responses[respIndex].examples.splice(exIndex, 1)
+  const resp = form.value.responses[respIndex]
+  if (!resp) return
+  resp.examples.splice(exIndex, 1)
 }
 
 function addTag() {

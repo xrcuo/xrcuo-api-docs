@@ -142,7 +142,8 @@ function initCpuChart(labels: string[], data: number[]) {
   if (!ctx) return
   if (cpuChart) {
     cpuChart.data.labels = labels
-    cpuChart.data.datasets[0].data = data
+    const dataset = cpuChart.data.datasets[0]
+    if (dataset) dataset.data = data
     cpuChart.update('none')
     return
   }
@@ -204,7 +205,8 @@ function initMemChart(labels: string[], data: number[]) {
   if (!ctx) return
   if (memChart) {
     memChart.data.labels = labels
-    memChart.data.datasets[0].data = data
+    const dataset = memChart.data.datasets[0]
+    if (dataset) dataset.data = data
     memChart.update('none')
     return
   }
@@ -266,8 +268,10 @@ function initNetChart(labels: string[], upload: number[], download: number[]) {
   if (!ctx) return
   if (netChart) {
     netChart.data.labels = labels
-    netChart.data.datasets[0].data = upload
-    netChart.data.datasets[1].data = download
+    const ds0 = netChart.data.datasets[0]
+    const ds1 = netChart.data.datasets[1]
+    if (ds0) ds0.data = upload
+    if (ds1) ds1.data = download
     netChart.update('none')
     return
   }

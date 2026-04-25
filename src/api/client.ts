@@ -54,25 +54,39 @@ export const authApi = {
     }),
 }
 
+export interface ApiDocRaw {
+  id: number
+  name: string
+  path: string
+  method: string
+  description: string
+  category: string
+  tags: string
+  parameters: string
+  headers: string
+  request_body: string
+  responses: string
+}
+
 export const apiDocApi = {
   list: (params?: { category?: string; method?: string; keyword?: string }) => {
     const searchParams = new URLSearchParams()
     if (params?.category) searchParams.append('category', params.category)
     if (params?.method) searchParams.append('method', params.method)
     if (params?.keyword) searchParams.append('keyword', params.keyword)
-    return request<ApiEndpoint[]>(`/admin/api-docs?${searchParams.toString()}`)
+    return request<ApiDocRaw[]>(`/admin/api-docs?${searchParams.toString()}`)
   },
 
-  get: (id: number) => request<ApiEndpoint>(`/admin/api-docs/${id}`),
+  get: (id: number) => request<ApiDocRaw>(`/admin/api-docs/${id}`),
 
   create: (data: ApiDocForm) =>
-    request<ApiEndpoint>('/admin/api-docs', {
+    request<ApiDocRaw>('/admin/api-docs', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
   update: (data: ApiDocForm) =>
-    request<ApiEndpoint>('/admin/api-docs', {
+    request<ApiDocRaw>('/admin/api-docs', {
       method: 'PUT',
       body: JSON.stringify(data),
     }),

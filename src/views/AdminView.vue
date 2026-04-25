@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { apiDocApi } from '@/api/client'
+import type { ApiDocRaw } from '@/api/client'
 import ApiDocEditor from '@/components/ApiDocEditor.vue'
 import SystemMonitor from '@/components/SystemMonitor.vue'
 import type { ApiDocForm, ApiEndpoint } from '@/types/api'
@@ -61,13 +62,13 @@ async function loadDocs() {
       id: String(item.id),
       name: item.name,
       path: item.path,
-      method: item.method,
+      method: item.method as ApiEndpoint['method'],
       description: item.description,
       category: item.category,
       tags: safeParse(item.tags, []),
       parameters: safeParse(item.parameters, []),
       headers: safeParse(item.headers, []),
-      requestBody: item.requestBody ? safeParse(item.requestBody, undefined) : undefined,
+      requestBody: item.request_body ? safeParse(item.request_body, undefined) : undefined,
       responses: safeParse(item.responses, []),
     }))
   } catch (e: unknown) {
@@ -86,7 +87,8 @@ async function loadDocs() {
   }
 }
 
-function safeParse<T>(json: string, fallback: T): T {
+function safeParse<T>(json: string | undefined, fallback: T): T {
+  if (!json) return fallback
   try {
     return JSON.parse(json) as T
   } catch {

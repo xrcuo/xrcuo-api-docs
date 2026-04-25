@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { apiDocApi } from '@/api/client'
+import type { ApiDocRaw } from '@/api/client'
 import ApiCard from '@/components/ApiCard.vue'
 import type { ApiEndpoint } from '@/types/api'
 
@@ -24,13 +25,13 @@ async function loadApiDocs() {
       id: String(item.id),
       name: item.name,
       path: item.path,
-      method: item.method,
+      method: item.method as ApiEndpoint['method'],
       description: item.description,
       category: item.category,
       tags: safeParse(item.tags, []),
       parameters: safeParse(item.parameters, []),
       headers: safeParse(item.headers, []),
-      requestBody: item.requestBody ? safeParse(item.requestBody, undefined) : undefined,
+      requestBody: item.request_body ? safeParse(item.request_body, undefined) : undefined,
       responses: safeParse(item.responses, []),
     }))
   } catch (e) {
@@ -40,7 +41,8 @@ async function loadApiDocs() {
   }
 }
 
-function safeParse<T>(json: string, fallback: T): T {
+function safeParse<T>(json: string | undefined, fallback: T): T {
+  if (!json) return fallback
   try {
     return JSON.parse(json) as T
   } catch {
