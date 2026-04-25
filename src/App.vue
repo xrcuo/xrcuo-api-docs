@@ -32,7 +32,6 @@ import { RouterView } from 'vue-router'
         <span class="nav-title">API Docs</span>
       </div>
       <div class="nav-links">
-        <router-link to="/admin" class="nav-link">管理后台</router-link>
         <a href="https://github.com" target="_blank" rel="noopener" class="nav-link">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
             <path
@@ -142,7 +141,15 @@ import { RouterView } from 'vue-router'
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
   background: var(--gray-50);
   color: var(--gray-800);
   line-height: 1.6;
@@ -154,6 +161,16 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+/* Ensure sticky works by creating proper scroll context */
+html,
+body {
+  overflow-x: hidden;
+}
+
+body {
+  overflow-y: auto;
 }
 
 .top-nav {
