@@ -3,7 +3,6 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { apiDocApi } from '@/api/client'
-import type { ApiDocRaw } from '@/api/client'
 import ApiDocEditor from '@/components/ApiDocEditor.vue'
 import SystemMonitor from '@/components/SystemMonitor.vue'
 import type { ApiDocForm, ApiEndpoint } from '@/types/api'
@@ -192,54 +191,65 @@ function logout() {
 <template>
   <div class="admin-page">
     <aside class="admin-sidebar">
-      <div class="sidebar-header">
-        <div class="logo">
+      <div class="sidebar-brand">
+        <div class="brand-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 2L2 7l10 5 10-5-10-5z"/>
             <path d="M2 17l10 5 10-5"/>
             <path d="M2 12l10 5 10-5"/>
           </svg>
-          <h2>管理后台</h2>
         </div>
-        <span class="user-info">{{ authStore.username }}</span>
+        <div class="brand-text">
+          <h2>管理后台</h2>
+          <span>{{ authStore.username }}</span>
+        </div>
       </div>
+
       <nav class="sidebar-nav">
         <button
           class="nav-item"
           :class="{ active: activeTab === 'docs' }"
           @click="activeTab = 'docs'"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/>
-            <line x1="16" y1="17" x2="8" y2="17"/>
-            <polyline points="10 9 9 9 8 9"/>
-          </svg>
-          API 文档管理
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </span>
+          <span class="nav-label">API 文档管理</span>
+          <span class="nav-badge">{{ docs.length }}</span>
         </button>
         <button
           class="nav-item"
           :class="{ active: activeTab === 'monitor' }"
           @click="activeTab = 'monitor'"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-          </svg>
-          系统监控
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+          </span>
+          <span class="nav-label">系统监控</span>
         </button>
         <button
           class="nav-item"
           :class="{ active: activeTab === 'password' }"
           @click="activeTab = 'password'"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
-          修改密码
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </span>
+          <span class="nav-label">修改密码</span>
         </button>
       </nav>
+
       <button class="btn-logout" @click="logout">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -252,12 +262,12 @@ function logout() {
 
     <main class="admin-main">
       <div v-if="activeTab === 'docs'" class="tab-content">
-        <div class="tab-header">
-          <div class="header-title">
-            <h2>API 文档列表</h2>
-            <p class="header-desc">管理系统 API 接口文档</p>
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">API 文档列表</h1>
+            <p class="page-desc">管理系统 API 接口文档</p>
           </div>
-          <button class="btn-create" @click="openCreate">
+          <button class="btn-primary" @click="openCreate">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"/>
               <line x1="5" y1="12" x2="19" y2="12"/>
@@ -266,73 +276,102 @@ function logout() {
           </button>
         </div>
 
-        <div v-if="loading" class="loading-state">
-          <div class="loading-spinner"></div>
+        <div v-if="loading" class="state-loading">
+          <div class="spinner"></div>
           <span>加载中...</span>
         </div>
-        <div v-else-if="error" class="error-state">{{ error }}</div>
-        <div v-else class="doc-list">
-          <div v-for="doc in docs" :key="doc.id" class="doc-item">
-            <div class="doc-main">
-              <span class="method-badge" :class="doc.method.toLowerCase()">{{ doc.method }}</span>
-              <span class="doc-path">{{ doc.path }}</span>
-              <span class="doc-name">{{ doc.name }}</span>
-              <span class="doc-category">{{ doc.category }}</span>
-            </div>
-            <div class="doc-actions">
-              <button class="btn-action edit" @click="openEdit(doc)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-                编辑
-              </button>
-              <button class="btn-action delete" @click="handleDelete(doc.id)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="3 6 5 6 21 6"/>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                </svg>
-                删除
-              </button>
-            </div>
+        <div v-else-if="error" class="state-error">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          {{ error }}
+        </div>
+        <div v-else class="doc-table-wrapper">
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th>方法</th>
+                <th>路径</th>
+                <th>名称</th>
+                <th>分类</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="doc in docs" :key="doc.id" class="doc-row">
+                <td>
+                  <span class="method-tag" :class="doc.method.toLowerCase()">{{ doc.method }}</span>
+                </td>
+                <td class="cell-path">{{ doc.path }}</td>
+                <td class="cell-name">{{ doc.name }}</td>
+                <td>
+                  <span class="category-tag">{{ doc.category }}</span>
+                </td>
+                <td>
+                  <div class="row-actions">
+                    <button class="btn-icon edit" @click="openEdit(doc)" title="编辑">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                    <button class="btn-icon delete" @click="handleDelete(doc.id)" title="删除">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div v-if="docs.length === 0" class="table-empty">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <p>暂无文档，点击右上角按钮创建</p>
           </div>
         </div>
       </div>
 
       <div v-if="activeTab === 'monitor'" class="tab-content">
-        <div class="tab-header">
-          <div class="header-title">
-            <h2>系统监控</h2>
-            <p class="header-desc">实时监控系统资源使用情况</p>
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">系统监控</h1>
+            <p class="page-desc">实时监控系统资源使用情况</p>
           </div>
         </div>
         <SystemMonitor />
       </div>
 
       <div v-if="activeTab === 'password'" class="tab-content">
-        <div class="tab-header">
-          <div class="header-title">
-            <h2>修改密码</h2>
-            <p class="header-desc">更新您的登录密码</p>
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">修改密码</h1>
+            <p class="page-desc">更新您的登录密码</p>
           </div>
         </div>
-        <div class="password-card">
-          <form class="password-form" @submit.prevent="handleChangePassword">
-            <div class="form-group">
+        <div class="form-card">
+          <form class="form-stack" @submit.prevent="handleChangePassword">
+            <div class="form-field">
               <label>原密码</label>
-              <input v-model="oldPassword" type="password" class="form-input" placeholder="请输入原密码" />
+              <input v-model="oldPassword" type="password" placeholder="请输入原密码" />
             </div>
-            <div class="form-group">
+            <div class="form-field">
               <label>新密码</label>
-              <input v-model="newPassword" type="password" class="form-input" placeholder="请输入新密码（至少6位）" />
+              <input v-model="newPassword" type="password" placeholder="请输入新密码（至少6位）" />
             </div>
-            <div class="form-group">
+            <div class="form-field">
               <label>确认新密码</label>
-              <input v-model="confirmPassword" type="password" class="form-input" placeholder="请再次输入新密码" />
+              <input v-model="confirmPassword" type="password" placeholder="请再次输入新密码" />
             </div>
-            <div v-if="passwordError" class="error-msg">{{ passwordError }}</div>
-            <div v-if="passwordSuccess" class="success-msg">{{ passwordSuccess }}</div>
-            <button type="submit" class="btn-submit">修改密码</button>
+            <div v-if="passwordError" class="alert alert-error">{{ passwordError }}</div>
+            <div v-if="passwordSuccess" class="alert alert-success">{{ passwordSuccess }}</div>
+            <button type="submit" class="btn-primary btn-full">修改密码</button>
           </form>
         </div>
       </div>
@@ -353,10 +392,11 @@ function logout() {
   min-height: 100vh;
 }
 
+/* Sidebar */
 .admin-sidebar {
-  width: 260px;
-  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
-  color: #fff;
+  width: var(--sidebar-width);
+  background: var(--gray-900);
+  color: var(--gray-300);
   display: flex;
   flex-direction: column;
   padding: 24px 0;
@@ -367,43 +407,46 @@ function logout() {
   z-index: 100;
 }
 
-.sidebar-header {
-  padding: 0 24px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.logo {
+.sidebar-brand {
   display: flex;
   align-items: center;
   gap: 12px;
+  padding: 0 20px 24px;
   margin-bottom: 8px;
+  border-bottom: 1px solid var(--gray-800);
 }
 
-.logo svg {
-  width: 28px;
-  height: 28px;
-  color: #667eea;
+.brand-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-600);
+  border-radius: var(--radius);
+  color: #ffffff;
 }
 
-.logo h2 {
-  font-size: 18px;
+.brand-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.brand-text h2 {
+  font-size: 16px;
   font-weight: 700;
+  color: #ffffff;
   margin: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
-.user-info {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
-  padding-left: 40px;
+.brand-text span {
+  font-size: 12px;
+  color: var(--gray-500);
 }
 
 .sidebar-nav {
   flex: 1;
-  padding: 20px 16px;
+  padding: 12px 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -412,49 +455,75 @@ function logout() {
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
-  padding: 12px 16px;
+  padding: 10px 14px;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--gray-400);
   text-align: left;
   cursor: pointer;
   font-size: 14px;
-  border-radius: 10px;
-  transition: all 0.2s;
+  border-radius: var(--radius);
+  transition: all var(--transition-fast);
+  position: relative;
 }
 
-.nav-item svg {
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.nav-icon svg {
   width: 18px;
   height: 18px;
-  flex-shrink: 0;
+}
+
+.nav-label {
+  flex: 1;
+}
+
+.nav-badge {
+  padding: 2px 8px;
+  background: var(--gray-700);
+  color: var(--gray-300);
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-full);
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--gray-800);
+  color: var(--gray-200);
 }
 
 .nav-item.active {
-  background: rgba(102, 126, 234, 0.15);
-  color: #667eea;
+  background: var(--primary-600);
+  color: #ffffff;
+}
+
+.nav-item.active .nav-badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
 }
 
 .btn-logout {
-  margin: 0 20px 20px;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+  margin: 0 12px 12px;
+  padding: 10px;
+  background: transparent;
+  color: var(--gray-500);
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
 }
 
 .btn-logout svg {
@@ -463,301 +532,325 @@ function logout() {
 }
 
 .btn-logout:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--gray-800);
+  color: var(--gray-300);
+  border-color: var(--gray-700);
 }
 
+/* Main Content */
 .admin-main {
   flex: 1;
-  margin-left: 260px;
+  margin-left: var(--sidebar-width);
   padding: 32px;
-  background: #f5f7fa;
+  background: var(--gray-50);
   min-height: 100vh;
 }
 
-.tab-header {
+.page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 24px;
 }
 
-.header-title h2 {
-  font-size: 22px;
+.page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--gray-900);
   margin: 0 0 4px;
-  color: #1a1a2e;
+  letter-spacing: -0.025em;
 }
 
-.header-desc {
-  font-size: 13px;
-  color: #888;
+.page-desc {
+  font-size: 14px;
+  color: var(--gray-500);
   margin: 0;
 }
 
-.btn-create {
-  display: flex;
+/* Buttons */
+.btn-primary {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
+  background: var(--primary-600);
+  color: #ffffff;
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  transition: all var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(79, 70, 229, 0.3);
 }
 
-.btn-create svg {
+.btn-primary:hover {
+  background: var(--primary-700);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+}
+
+.btn-primary svg {
   width: 16px;
   height: 16px;
 }
 
-.btn-create:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+.btn-full {
+  width: 100%;
+  justify-content: center;
 }
 
-.loading-state,
-.error-state {
+/* Table */
+.doc-table-wrapper {
+  background: #ffffff;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.doc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.doc-table th {
+  padding: 14px 20px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--gray-600);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.doc-table td {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--gray-100);
+  color: var(--gray-700);
+}
+
+.doc-row {
+  transition: background var(--transition-fast);
+}
+
+.doc-row:hover {
+  background: var(--gray-50);
+}
+
+.doc-row:last-child td {
+  border-bottom: none;
+}
+
+.cell-path {
+  font-family: 'SF Mono', Monaco, monospace;
+  font-size: 13px;
+  color: var(--gray-800);
+  font-weight: 500;
+}
+
+.cell-name {
+  color: var(--gray-600);
+}
+
+.method-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-family: 'SF Mono', Monaco, monospace;
+}
+
+.method-tag.get {
+  background: var(--method-get-bg);
+  color: var(--method-get);
+}
+
+.method-tag.post {
+  background: var(--method-post-bg);
+  color: var(--method-post);
+}
+
+.method-tag.put {
+  background: var(--method-put-bg);
+  color: var(--method-put);
+}
+
+.method-tag.delete {
+  background: var(--method-delete-bg);
+  color: var(--method-delete);
+}
+
+.method-tag.patch {
+  background: var(--method-patch-bg);
+  color: var(--method-patch);
+}
+
+.category-tag {
+  padding: 4px 12px;
+  background: var(--gray-100);
+  color: var(--gray-600);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--radius-full);
+}
+
+.row-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: var(--gray-500);
+  background: transparent;
+}
+
+.btn-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-icon:hover {
+  background: var(--gray-100);
+}
+
+.btn-icon.edit:hover {
+  color: var(--info-600);
+  background: var(--info-50);
+}
+
+.btn-icon.delete:hover {
+  color: var(--error-600);
+  background: var(--error-50);
+}
+
+/* States */
+.state-loading,
+.state-error {
   padding: 60px;
   text-align: center;
-  color: #888;
-  background: #fff;
-  border-radius: 12px;
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
 }
 
-.loading-spinner {
+.spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid #e0e0e0;
-  border-top-color: #667eea;
+  border: 3px solid var(--gray-200);
+  border-top-color: var(--primary-600);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.state-error {
+  color: var(--error-600);
+  background: var(--error-50);
+  border-color: var(--error-100);
 }
 
-.error-state {
-  color: #e53935;
-}
-
-.doc-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.doc-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  background: #fff;
-  border-radius: 12px;
-  border: 1px solid #e8e8e8;
-  transition: all 0.2s;
-}
-
-.doc-item:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-  transform: translateY(-1px);
-}
-
-.doc-main {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex: 1;
-  min-width: 0;
-}
-
-.method-badge {
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  min-width: 52px;
+.table-empty {
+  padding: 60px;
   text-align: center;
+  color: var(--gray-400);
 }
 
-.get {
-  background: #e3f2fd;
-  color: #1976d2;
+.table-empty svg {
+  margin-bottom: 12px;
+  color: var(--gray-300);
 }
 
-.post {
-  background: #e8f5e9;
-  color: #388e3c;
-}
-
-.put {
-  background: #fff3e0;
-  color: #f57c00;
-}
-
-.delete {
-  background: #ffebee;
-  color: #d32f2f;
-}
-
-.patch {
-  background: #f3e5f5;
-  color: #7b1fa2;
-}
-
-.doc-path {
-  font-family: 'SF Mono', monospace;
-  font-size: 13px;
-  color: #555;
-  background: #f5f5f5;
-  padding: 4px 10px;
-  border-radius: 6px;
-}
-
-.doc-name {
-  flex: 1;
-  font-size: 14px;
-  color: #333;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-weight: 500;
-}
-
-.doc-category {
-  font-size: 12px;
-  color: #888;
-  padding: 4px 12px;
-  background: #f5f5f5;
-  border-radius: 20px;
-  white-space: nowrap;
-}
-
-.doc-actions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.btn-action {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-weight: 500;
-}
-
-.btn-action svg {
-  width: 14px;
-  height: 14px;
-}
-
-.btn-action.edit {
-  background: #e3f2fd;
-  color: #1976d2;
-}
-
-.btn-action.edit:hover {
-  background: #bbdefb;
-}
-
-.btn-action.delete {
-  background: #ffebee;
-  color: #c62828;
-}
-
-.btn-action.delete:hover {
-  background: #ffcdd2;
-}
-
-.password-card {
-  background: #fff;
-  border-radius: 12px;
+/* Form Card */
+.form-card {
+  background: #ffffff;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
   padding: 32px;
-  border: 1px solid #e8e8e8;
   max-width: 480px;
+  box-shadow: var(--shadow-sm);
 }
 
-.password-form {
+.form-stack {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.form-group {
+.form-field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
-.form-group label {
+.form-field label {
   font-size: 14px;
   font-weight: 500;
-  color: #555;
+  color: var(--gray-700);
 }
 
-.form-input {
-  padding: 12px 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 10px;
+.form-field input {
+  padding: 12px 14px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius);
   font-size: 14px;
-  transition: all 0.2s;
-  background: #fafafa;
+  color: var(--gray-800);
+  background: var(--gray-50);
+  transition: all var(--transition-fast);
 }
 
-.form-input:focus {
+.form-field input:focus {
   outline: none;
-  border-color: #667eea;
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--primary-400);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px var(--primary-100);
 }
 
-.error-msg {
-  color: #e53935;
+.form-field input::placeholder {
+  color: var(--gray-400);
+}
+
+.alert {
+  padding: 10px 14px;
+  border-radius: var(--radius);
   font-size: 13px;
-  padding: 8px 12px;
-  background: #ffebee;
-  border-radius: 8px;
+  font-weight: 500;
 }
 
-.success-msg {
-  color: #43a047;
-  font-size: 13px;
-  padding: 8px 12px;
-  background: #e8f5e9;
-  border-radius: 8px;
+.alert-error {
+  color: var(--error-600);
+  background: var(--error-50);
+  border: 1px solid var(--error-100);
 }
 
-.btn-submit {
-  padding: 14px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+.alert-success {
+  color: var(--success-600);
+  background: var(--success-50);
+  border: 1px solid var(--success-100);
 }
 
-.btn-submit:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 768px) {
@@ -775,15 +868,19 @@ function logout() {
     flex-direction: column;
   }
 
-  .doc-item {
+  .page-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
 
-  .doc-actions {
-    width: 100%;
-    justify-content: flex-end;
+  .doc-table th,
+  .doc-table td {
+    padding: 10px 12px;
+  }
+
+  .cell-name {
+    display: none;
   }
 }
 </style>

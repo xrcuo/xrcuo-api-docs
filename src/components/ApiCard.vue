@@ -34,16 +34,16 @@ const closeResponse = () => {
         <span class="api-name">{{ api.name }}</span>
       </div>
       <div class="api-actions">
-        <button class="btn-response" @click.stop="openResponse">查看返回信息</button>
+        <button class="btn-response" @click.stop="openResponse">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          响应
+        </button>
         <span class="toggle-icon" :class="{ expanded: showDetail }">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path
-              d="M4 6L8 10L12 6"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
+            <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
       </div>
@@ -56,7 +56,7 @@ const closeResponse = () => {
       </div>
     </div>
 
-    <transition name="slide">
+    <transition name="expand">
       <ApiDetail v-if="showDetail" :api="api" />
     </transition>
 
@@ -67,15 +67,16 @@ const closeResponse = () => {
 <style scoped>
 .api-card {
   background: #ffffff;
-  border: 1px solid #e8e8e8;
-  border-radius: 12px;
-  margin-bottom: 16px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
   overflow: hidden;
-  transition: box-shadow 0.3s ease;
+  transition: all var(--transition);
 }
 
 .api-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-md);
+  border-color: var(--gray-300);
 }
 
 .api-header {
@@ -84,13 +85,13 @@ const closeResponse = () => {
   justify-content: space-between;
   padding: 16px 20px;
   cursor: pointer;
-  background: #fafafa;
+  background: var(--gray-50);
   border-bottom: 1px solid transparent;
-  transition: background 0.2s;
+  transition: background var(--transition-fast);
 }
 
 .api-header:hover {
-  background: #f0f0f0;
+  background: var(--gray-100);
 }
 
 .api-main {
@@ -103,8 +104,8 @@ const closeResponse = () => {
 
 .api-path {
   font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-  font-size: 14px;
-  color: #333;
+  font-size: 13px;
+  color: var(--gray-700);
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -112,8 +113,8 @@ const closeResponse = () => {
 }
 
 .api-name {
-  font-size: 14px;
-  color: #666;
+  font-size: 13px;
+  color: var(--gray-500);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -122,32 +123,43 @@ const closeResponse = () => {
 .api-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
 .btn-response {
-  padding: 6px 14px;
-  background: #4a90d9;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: var(--primary-50);
+  color: var(--primary-600);
+  border: 1px solid var(--primary-200);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
-  white-space: nowrap;
+  transition: all var(--transition-fast);
 }
 
 .btn-response:hover {
-  background: #357abd;
+  background: var(--primary-100);
+  border-color: var(--primary-300);
 }
 
 .toggle-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #999;
-  transition: transform 0.3s ease;
+  width: 28px;
+  height: 28px;
+  color: var(--gray-400);
+  transition: transform var(--transition-slow);
+  border-radius: var(--radius-sm);
+}
+
+.toggle-icon:hover {
+  background: var(--gray-200);
 }
 
 .toggle-icon.expanded {
@@ -156,13 +168,13 @@ const closeResponse = () => {
 
 .api-summary {
   padding: 12px 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--gray-100);
 }
 
 .api-description {
   font-size: 13px;
-  color: #666;
-  line-height: 1.5;
+  color: var(--gray-600);
+  line-height: 1.6;
   margin-bottom: 8px;
 }
 
@@ -174,22 +186,23 @@ const closeResponse = () => {
 
 .tag {
   padding: 2px 8px;
-  background: #f0f0f0;
-  color: #666;
-  font-size: 12px;
-  border-radius: 4px;
+  background: var(--gray-100);
+  color: var(--gray-600);
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
 }
 
-.slide-enter-active,
-.slide-leave-active {
+.expand-enter-active,
+.expand-leave-active {
   transition: all 0.3s ease;
   max-height: 2000px;
   opacity: 1;
   overflow: hidden;
 }
 
-.slide-enter-from,
-.slide-leave-to {
+.expand-enter-from,
+.expand-leave-to {
   max-height: 0;
   opacity: 0;
 }

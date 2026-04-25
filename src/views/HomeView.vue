@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { apiDocApi } from '@/api/client'
-import type { ApiDocRaw } from '@/api/client'
 import ApiCard from '@/components/ApiCard.vue'
 import type { ApiEndpoint } from '@/types/api'
 
@@ -82,15 +81,42 @@ const groupedApis = computed(() => {
   })
   return groups
 })
+
+const stats = computed(() => {
+  const total = apiEndpoints.value.length
+  const categories = new Set(apiEndpoints.value.map((a) => a.category)).size
+  const methods = new Set(apiEndpoints.value.map((a) => a.method)).size
+  return { total, categories, methods }
+})
 </script>
 
 <template>
   <div class="home-view">
-    <header class="page-header">
-      <h1 class="page-title">API 接口文档</h1>
-      <p class="page-subtitle">完整的接口参考与使用指南</p>
-    </header>
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-content">
+        <h1 class="hero-title">API 接口文档</h1>
+        <p class="hero-subtitle">完整的接口参考与使用指南，助力开发效率提升</p>
+        <div class="hero-stats">
+          <div class="stat-item">
+            <span class="stat-value">{{ stats.total }}</span>
+            <span class="stat-label">接口总数</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-value">{{ stats.categories }}</span>
+            <span class="stat-label">分类模块</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-value">{{ stats.methods }}</span>
+            <span class="stat-label">请求方法</span>
+          </div>
+        </div>
+      </div>
+    </section>
 
+    <!-- Filters -->
     <div class="filters">
       <div class="search-box">
         <svg class="search-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -117,12 +143,12 @@ const groupedApis = computed(() => {
         />
       </div>
 
-      <div class="filter-row">
+      <div class="filter-groups">
         <div class="filter-group">
-          <label>分类</label>
-          <div class="filter-options">
+          <label>分类筛选</label>
+          <div class="filter-chips">
             <button
-              class="filter-btn"
+              class="chip"
               :class="{ active: selectedCategory === '全部' }"
               @click="selectedCategory = '全部'"
             >
@@ -131,7 +157,7 @@ const groupedApis = computed(() => {
             <button
               v-for="cat in categories"
               :key="cat"
-              class="filter-btn"
+              class="chip"
               :class="{ active: selectedCategory === cat }"
               @click="selectedCategory = cat"
             >
@@ -141,12 +167,12 @@ const groupedApis = computed(() => {
         </div>
 
         <div class="filter-group">
-          <label>方法</label>
-          <div class="filter-options">
+          <label>HTTP 方法</label>
+          <div class="filter-chips">
             <button
               v-for="method in methods"
               :key="method"
-              class="filter-btn"
+              class="chip"
               :class="{ active: selectedMethod === method }"
               @click="selectedMethod = method"
             >
@@ -157,25 +183,42 @@ const groupedApis = computed(() => {
       </div>
     </div>
 
-    <div class="results-info">
-      共 <strong>{{ filteredApis.length }}</strong> 个接口
-      <span v-if="loading" class="loading-text">（加载中...）</span>
+    <!-- Results -->
+    <div class="results-bar">
+      <span class="results-count">
+        共 <strong>{{ filteredApis.length }}</strong> 个接口
+      </span>
+      <span v-if="loading" class="loading-indicator">
+        <span class="loading-dot"></span>
+        <span class="loading-dot"></span>
+        <span class="loading-dot"></span>
+        加载中
+      </span>
     </div>
 
     <div class="api-list">
       <template v-if="Object.keys(groupedApis).length > 0">
-        <div v-for="(apis, category) in groupedApis" :key="category" class="category-group">
-          <h2 class="category-title">{{ category }}</h2>
-          <ApiCard v-for="api in apis" :key="api.id" :api="api" />
+        <div v-for="(apis, category) in groupedApis" :key="category" class="category-section">
+          <div class="category-header">
+            <h2 class="category-title">{{ category }}</h2>
+            <span class="category-count">{{ apis.length }} 个接口</span>
+          </div>
+          <div class="category-cards">
+            <ApiCard v-for="api in apis" :key="api.id" :api="api" />
+          </div>
         </div>
       </template>
       <div v-else-if="loading" class="empty-state">
-        <div class="empty-icon">⏳</div>
+        <div class="empty-spinner"></div>
         <p>正在加载 API 文档...</p>
       </div>
       <div v-else class="empty-state">
-        <div class="empty-icon">🔍</div>
-        <p>未找到匹配的接口</p>
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" class="empty-icon">
+          <circle cx="28" cy="28" r="18" stroke="currentColor" stroke-width="2" />
+          <path d="M40 40L56 56" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        <p class="empty-title">未找到匹配的接口</p>
+        <p class="empty-desc">尝试调整搜索关键词或筛选条件</p>
         <button
           class="btn-reset"
           @click="
@@ -197,192 +240,325 @@ const groupedApis = computed(() => {
 .home-view {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 0 24px 48px;
 }
 
-.page-header {
+/* Hero */
+.hero {
+  padding: 48px 0 32px;
   text-align: center;
+}
+
+.hero-title {
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--gray-900);
+  margin-bottom: 12px;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.hero-subtitle {
+  font-size: 16px;
+  color: var(--gray-500);
   margin-bottom: 32px;
 }
 
-.page-title {
-  font-size: 32px;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin-bottom: 8px;
+.hero-stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 24px;
+  padding: 16px 32px;
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--gray-200);
 }
 
-.page-subtitle {
-  font-size: 16px;
-  color: #888;
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
 
+.stat-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--primary-600);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: var(--gray-500);
+  font-weight: 500;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--gray-200);
+}
+
+/* Filters */
 .filters {
   background: #ffffff;
-  border: 1px solid #e8e8e8;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
 }
 
 .search-box {
   position: relative;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .search-icon {
   position: absolute;
-  left: 14px;
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
-  color: #aaa;
+  color: var(--gray-400);
 }
 
 .search-input {
   width: 100%;
-  padding: 12px 16px 12px 44px;
-  border: 1px solid #e0e0e0;
-  border-radius: 10px;
-  font-size: 14px;
-  color: #333;
-  background: #fafafa;
-  transition: all 0.2s;
+  padding: 14px 16px 14px 48px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  color: var(--gray-800);
+  background: var(--gray-50);
+  transition: all var(--transition);
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #4a90d9;
+  border-color: var(--primary-400);
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.1);
+  box-shadow: 0 0 0 4px var(--primary-100);
 }
 
 .search-input::placeholder {
-  color: #aaa;
+  color: var(--gray-400);
 }
 
-.filter-row {
+.filter-groups {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-}
-
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  gap: 16px;
 }
 
 .filter-group label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  color: #555;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  display: block;
 }
 
-.filter-options {
+.filter-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.filter-btn {
-  padding: 6px 14px;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
+.chip {
+  padding: 8px 16px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-full);
   background: #ffffff;
-  color: #555;
+  color: var(--gray-600);
   font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
 }
 
-.filter-btn:hover {
-  border-color: #bbb;
-  background: #f8f8f8;
+.chip:hover {
+  border-color: var(--gray-300);
+  background: var(--gray-50);
 }
 
-.filter-btn.active {
-  background: #4a90d9;
+.chip.active {
+  background: var(--primary-600);
   color: #ffffff;
-  border-color: #4a90d9;
+  border-color: var(--primary-600);
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
 }
 
-.results-info {
+/* Results Bar */
+.results-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.results-count {
   font-size: 14px;
-  color: #666;
-  margin-bottom: 16px;
+  color: var(--gray-600);
 }
 
-.results-info strong {
-  color: #4a90d9;
+.results-count strong {
+  color: var(--primary-600);
+  font-weight: 700;
 }
 
-.loading-text {
-  color: #999;
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 13px;
+  color: var(--primary-600);
 }
 
-.category-group {
-  margin-bottom: 24px;
+.loading-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--primary-600);
+  border-radius: 50%;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.loading-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.loading-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+/* Category Section */
+.category-section {
+  margin-bottom: 32px;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 0 4px;
 }
 
 .category-title {
   font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 12px;
-  padding-left: 4px;
+  font-weight: 700;
+  color: var(--gray-800);
 }
 
+.category-count {
+  font-size: 13px;
+  color: var(--gray-400);
+  font-weight: 500;
+  padding: 2px 10px;
+  background: var(--gray-100);
+  border-radius: var(--radius-full);
+}
+
+/* Empty State */
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
-  color: #888;
+  padding: 80px 20px;
+  color: var(--gray-400);
+}
+
+.empty-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--gray-200);
+  border-top-color: var(--primary-600);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 20px;
 }
 
 .empty-icon {
-  font-size: 48px;
+  color: var(--gray-300);
   margin-bottom: 16px;
 }
 
-.empty-state p {
-  font-size: 16px;
-  margin-bottom: 16px;
+.empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: 8px;
+}
+
+.empty-desc {
+  font-size: 14px;
+  color: var(--gray-500);
+  margin-bottom: 24px;
 }
 
 .btn-reset {
-  padding: 8px 20px;
-  background: #4a90d9;
-  color: white;
+  padding: 10px 24px;
+  background: var(--primary-600);
+  color: #ffffff;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius);
   font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all var(--transition);
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
 }
 
 .btn-reset:hover {
-  background: #357abd;
+  background: var(--primary-700);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 768px) {
   .home-view {
-    padding: 16px;
+    padding: 0 16px 32px;
   }
 
-  .page-title {
-    font-size: 24px;
+  .hero {
+    padding: 32px 0 24px;
+  }
+
+  .hero-title {
+    font-size: 28px;
+  }
+
+  .hero-stats {
+    gap: 16px;
+    padding: 12px 20px;
+  }
+
+  .stat-value {
+    font-size: 22px;
   }
 
   .filters {
     padding: 16px;
   }
 
-  .filter-options {
-    gap: 6px;
-  }
-
-  .filter-btn {
-    padding: 5px 10px;
+  .chip {
+    padding: 6px 12px;
     font-size: 12px;
   }
 }

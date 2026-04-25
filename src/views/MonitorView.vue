@@ -142,8 +142,8 @@ function initCpuChart(labels: string[], data: number[]) {
         {
           label: 'CPU使用率 (%)',
           data,
-          borderColor: '#667eea',
-          backgroundColor: 'rgba(102, 126, 234, 0.1)',
+          borderColor: '#6366f1',
+          backgroundColor: 'rgba(99, 102, 241, 0.1)',
           fill: true,
           tension: 0.4,
           pointRadius: 0,
@@ -189,8 +189,8 @@ function initMemChart(labels: string[], data: number[]) {
         {
           label: '内存使用率 (%)',
           data,
-          borderColor: '#43a047',
-          backgroundColor: 'rgba(67, 160, 71, 0.1)',
+          borderColor: '#22c55e',
+          backgroundColor: 'rgba(34, 197, 94, 0.1)',
           fill: true,
           tension: 0.4,
           pointRadius: 0,
@@ -238,8 +238,8 @@ function initNetChart(labels: string[], upload: number[], download: number[]) {
         {
           label: '上行 (MB/s)',
           data: upload,
-          borderColor: '#f57c00',
-          backgroundColor: 'rgba(245, 124, 0, 0.05)',
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245, 158, 11, 0.05)',
           fill: true,
           tension: 0.4,
           pointRadius: 0,
@@ -247,8 +247,8 @@ function initNetChart(labels: string[], upload: number[], download: number[]) {
         {
           label: '下行 (MB/s)',
           data: download,
-          borderColor: '#1976d2',
-          backgroundColor: 'rgba(25, 118, 210, 0.05)',
+          borderColor: '#0ea5e9',
+          backgroundColor: 'rgba(14, 165, 233, 0.05)',
           fill: true,
           tension: 0.4,
           pointRadius: 0,
@@ -280,130 +280,151 @@ function initNetChart(labels: string[], upload: number[], download: number[]) {
 
 <template>
   <div class="monitor-page">
-    <div class="monitor-header">
-      <h1>系统资源监控</h1>
-      <div class="header-info">
-        <span v-if="lastUpdate" class="update-time">最后更新: {{ lastUpdate }}</span>
-        <span v-if="loading" class="loading-indicator">更新中...</span>
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">系统资源监控</h1>
+        <p class="page-desc">实时监控系统资源使用情况</p>
+      </div>
+      <div class="header-meta">
+        <span v-if="lastUpdate" class="meta-time">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          最后更新: {{ lastUpdate }}
+        </span>
+        <span v-if="loading" class="meta-loading">更新中...</span>
       </div>
     </div>
 
-    <div v-if="error" class="error-banner">{{ error }}</div>
+    <div v-if="error" class="alert alert-error">{{ error }}</div>
 
     <div class="metrics-grid">
-      <div class="metric-card" :class="{ alert: cpuAlert }">
-        <div class="metric-header">
-          <h3>CPU 使用率</h3>
-          <span v-if="cpuAlert" class="alert-badge">告警</span>
+      <!-- CPU Card -->
+      <div class="metric-card" :class="{ 'card-alert': cpuAlert }">
+        <div class="card-header">
+          <div class="card-icon cpu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="4" y="4" width="16" height="16" rx="2"/>
+              <rect x="9" y="9" width="6" height="6"/>
+              <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/>
+            </svg>
+          </div>
+          <div class="card-info">
+            <h3>CPU 使用率</h3>
+            <span v-if="cpuAlert" class="alert-label">告警</span>
+          </div>
         </div>
         <div class="metric-value">
           <span class="value">{{ currentMetrics?.cpu.total_percent.toFixed(1) ?? '--' }}</span>
           <span class="unit">%</span>
         </div>
-        <div class="metric-detail">
-          <div class="cores-info">
-            <span>核心数: {{ currentMetrics?.cpu.core_count ?? '--' }}</span>
-          </div>
-          <div class="cores-grid">
-            <div
-              v-for="(percent, index) in currentMetrics?.cpu.core_percents ?? []"
-              :key="index"
-              class="core-bar"
-            >
-              <div class="core-label">{{ index + 1 }}</div>
-              <div class="core-progress">
-                <div
-                  class="core-fill"
-                  :style="{ width: percent + '%', background: percent > cpuThreshold ? '#e53935' : '#667eea' }"
-                ></div>
-              </div>
-              <div class="core-percent">{{ percent.toFixed(0) }}%</div>
-            </div>
-          </div>
+        <div class="metric-bar">
+          <div
+            class="bar-fill"
+            :style="{
+              width: (currentMetrics?.cpu.total_percent ?? 0) + '%',
+              background: cpuAlert ? 'var(--error-500)' : 'var(--primary-500)',
+            }"
+          ></div>
         </div>
-        <div class="chart-container">
+        <div class="metric-detail">
+          <span>{{ currentMetrics?.cpu.core_count ?? '--' }} 核心</span>
+        </div>
+        <div class="chart-wrap">
           <canvas id="cpuChart"></canvas>
         </div>
       </div>
 
-      <div class="metric-card" :class="{ alert: memAlert }">
-        <div class="metric-header">
-          <h3>内存占用</h3>
-          <span v-if="memAlert" class="alert-badge">告警</span>
+      <!-- Memory Card -->
+      <div class="metric-card" :class="{ 'card-alert': memAlert }">
+        <div class="card-header">
+          <div class="card-icon memory">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M2 12h20M2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6M6 12V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4"/>
+            </svg>
+          </div>
+          <div class="card-info">
+            <h3>内存占用</h3>
+            <span v-if="memAlert" class="alert-label">告警</span>
+          </div>
         </div>
         <div class="metric-value">
           <span class="value">{{ currentMetrics?.memory.used_percent.toFixed(1) ?? '--' }}</span>
           <span class="unit">%</span>
         </div>
-        <div class="metric-detail">
-          <div class="mem-info">
-            <div class="mem-item">
-              <span class="mem-label">总内存</span>
-              <span class="mem-num">{{ formatBytes(currentMetrics?.memory.total ?? 0) }}</span>
-            </div>
-            <div class="mem-item">
-              <span class="mem-label">已用</span>
-              <span class="mem-num">{{ formatBytes(currentMetrics?.memory.used ?? 0) }}</span>
-            </div>
-            <div class="mem-item">
-              <span class="mem-label">可用</span>
-              <span class="mem-num">{{ formatBytes(currentMetrics?.memory.free ?? 0) }}</span>
-            </div>
-          </div>
-          <div class="mem-progress-bar">
-            <div
-              class="mem-progress-fill"
-              :style="{
-                width: (currentMetrics?.memory.used_percent ?? 0) + '%',
-                background: (currentMetrics?.memory.used_percent ?? 0) > memThreshold ? '#e53935' : '#43a047',
-              }"
-            ></div>
-          </div>
+        <div class="metric-bar">
+          <div
+            class="bar-fill"
+            :style="{
+              width: (currentMetrics?.memory.used_percent ?? 0) + '%',
+              background: memAlert ? 'var(--error-500)' : 'var(--success-500)',
+            }"
+          ></div>
         </div>
-        <div class="chart-container">
+        <div class="metric-detail memory-detail">
+          <span>已用 {{ formatBytes(currentMetrics?.memory.used ?? 0) }}</span>
+          <span>总共 {{ formatBytes(currentMetrics?.memory.total ?? 0) }}</span>
+        </div>
+        <div class="chart-wrap">
           <canvas id="memChart"></canvas>
         </div>
       </div>
 
-      <div class="metric-card" :class="{ alert: netAlert }">
-        <div class="metric-header">
-          <h3>网络流量</h3>
-          <span v-if="netAlert" class="alert-badge">告警</span>
+      <!-- Network Card -->
+      <div class="metric-card" :class="{ 'card-alert': netAlert }">
+        <div class="card-header">
+          <div class="card-icon network">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0"/>
+              <line x1="12" y1="20" x2="12.01" y2="20"/>
+            </svg>
+          </div>
+          <div class="card-info">
+            <h3>网络流量</h3>
+            <span v-if="netAlert" class="alert-label">告警</span>
+          </div>
         </div>
-        <div class="net-values">
-          <div class="net-item">
+        <div class="net-stats">
+          <div class="net-stat">
             <span class="net-label">上行</span>
             <span class="net-value">{{ formatSpeed(currentMetrics?.network.upload_speed ?? 0) }}</span>
           </div>
-          <div class="net-item">
+          <div class="net-stat">
             <span class="net-label">下行</span>
             <span class="net-value">{{ formatSpeed(currentMetrics?.network.download_speed ?? 0) }}</span>
           </div>
         </div>
         <div class="metric-detail">
-          <div class="net-total">
-            <span>总发送: {{ formatBytes(currentMetrics?.network.total_sent ?? 0) }}</span>
-            <span>总接收: {{ formatBytes(currentMetrics?.network.total_recv ?? 0) }}</span>
-          </div>
+          <span>发送 {{ formatBytes(currentMetrics?.network.total_sent ?? 0) }}</span>
+          <span>接收 {{ formatBytes(currentMetrics?.network.total_recv ?? 0) }}</span>
         </div>
-        <div class="chart-container">
+        <div class="chart-wrap">
           <canvas id="netChart"></canvas>
         </div>
       </div>
     </div>
 
-    <div class="threshold-panel">
-      <h3>告警阈值设置</h3>
+    <!-- Threshold Panel -->
+    <div class="threshold-card">
+      <h3 class="threshold-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        告警阈值设置
+      </h3>
       <div class="threshold-grid">
-        <div class="threshold-item">
+        <div class="threshold-field">
           <label>CPU 阈值 (%)</label>
           <input v-model.number="cpuThreshold" type="number" min="1" max="100" />
         </div>
-        <div class="threshold-item">
+        <div class="threshold-field">
           <label>内存 阈值 (%)</label>
           <input v-model.number="memThreshold" type="number" min="1" max="100" />
         </div>
-        <div class="threshold-item">
+        <div class="threshold-field">
           <label>网络 阈值 (MB/s)</label>
           <input v-model.number="netThreshold" type="number" min="1" />
         </div>
@@ -414,90 +435,145 @@ function initNetChart(labels: string[], upload: number[], download: number[]) {
 
 <style scoped>
 .monitor-page {
-  padding: 24px;
-  background: #f5f7fa;
+  padding: 32px;
+  background: var(--gray-50);
   min-height: 100vh;
 }
 
-.monitor-header {
+.page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 24px;
 }
 
-.monitor-header h1 {
+.page-title {
   font-size: 24px;
-  color: #333;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0 0 4px;
+  letter-spacing: -0.025em;
+}
+
+.page-desc {
+  font-size: 14px;
+  color: var(--gray-500);
   margin: 0;
 }
 
-.header-info {
+.header-meta {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
-.update-time {
+.meta-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 13px;
-  color: #888;
+  color: var(--gray-500);
 }
 
-.loading-indicator {
+.meta-loading {
   font-size: 13px;
-  color: #667eea;
+  color: var(--primary-600);
+  font-weight: 500;
 }
 
-.error-banner {
+.alert {
   padding: 12px 16px;
-  background: #ffebee;
-  color: #c62828;
-  border-radius: 8px;
+  border-radius: var(--radius);
   margin-bottom: 20px;
   font-size: 14px;
+  font-weight: 500;
 }
 
+.alert-error {
+  color: var(--error-600);
+  background: var(--error-50);
+  border: 1px solid var(--error-100);
+}
+
+/* Metrics Grid */
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
   gap: 20px;
   margin-bottom: 24px;
 }
 
 .metric-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  border: 1px solid #e8e8e8;
-  transition: all 0.3s;
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition);
 }
 
-.metric-card.alert {
-  border-color: #e53935;
-  box-shadow: 0 0 0 1px #e53935, 0 4px 12px rgba(229, 57, 53, 0.15);
+.metric-card:hover {
+  box-shadow: var(--shadow-md);
 }
 
-.metric-header {
+.metric-card.card-alert {
+  border-color: var(--error-200);
+  box-shadow: 0 0 0 1px var(--error-200), var(--shadow-sm);
+}
+
+.card-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.metric-header h3 {
-  font-size: 16px;
-  color: #555;
-  margin: 0;
-  font-weight: 500;
+.card-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  color: #ffffff;
 }
 
-.alert-badge {
-  padding: 2px 8px;
-  background: #e53935;
-  color: #fff;
-  border-radius: 4px;
-  font-size: 11px;
+.card-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.card-icon.cpu {
+  background: var(--primary-500);
+}
+
+.card-icon.memory {
+  background: var(--success-500);
+}
+
+.card-icon.network {
+  background: var(--warning-500);
+}
+
+.card-info {
+  flex: 1;
+}
+
+.card-info h3 {
+  font-size: 14px;
   font-weight: 600;
+  color: var(--gray-700);
+  margin: 0;
+}
+
+.alert-label {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--error-500);
+  color: #ffffff;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 700;
   animation: pulse 1.5s infinite;
 }
 
@@ -510,151 +586,99 @@ function initNetChart(labels: string[], upload: number[], download: number[]) {
   display: flex;
   align-items: baseline;
   gap: 4px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .metric-value .value {
   font-size: 36px;
-  font-weight: 700;
-  color: #333;
+  font-weight: 800;
+  color: var(--gray-900);
+  line-height: 1;
+  letter-spacing: -0.025em;
 }
 
 .metric-value .unit {
   font-size: 16px;
-  color: #888;
+  color: var(--gray-400);
+  font-weight: 500;
 }
 
-.metric-detail {
-  margin-bottom: 16px;
-}
-
-.cores-info {
-  font-size: 13px;
-  color: #888;
-  margin-bottom: 8px;
-}
-
-.cores-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  gap: 8px;
-}
-
-.core-bar {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-}
-
-.core-label {
-  width: 16px;
-  color: #888;
-  text-align: center;
-}
-
-.core-progress {
-  flex: 1;
+.metric-bar {
   height: 6px;
-  background: #f0f0f0;
-  border-radius: 3px;
+  background: var(--gray-100);
+  border-radius: var(--radius-full);
   overflow: hidden;
-}
-
-.core-fill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.5s ease;
-}
-
-.core-percent {
-  width: 32px;
-  color: #666;
-  text-align: right;
-}
-
-.mem-info {
-  display: flex;
-  gap: 16px;
   margin-bottom: 12px;
 }
 
-.mem-item {
+.bar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.5s ease, background 0.3s ease;
+}
+
+.metric-detail {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--gray-500);
+  margin-bottom: 16px;
+}
+
+.memory-detail {
+  gap: 16px;
+}
+
+.net-stats {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 12px;
+}
+
+.net-stat {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.mem-label {
-  font-size: 12px;
-  color: #888;
-}
-
-.mem-num {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-}
-
-.mem-progress-bar {
-  height: 8px;
-  background: #f0f0f0;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.mem-progress-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.5s ease;
-}
-
-.net-values {
-  display: flex;
-  gap: 24px;
-  margin-bottom: 16px;
-}
-
-.net-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
 .net-label {
   font-size: 12px;
-  color: #888;
+  color: var(--gray-400);
+  font-weight: 500;
 }
 
 .net-value {
-  font-size: 20px;
-  font-weight: 600;
-  color: #333;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gray-800);
 }
 
-.net-total {
-  display: flex;
-  gap: 16px;
-  font-size: 13px;
-  color: #666;
-}
-
-.chart-container {
-  height: 160px;
+.chart-wrap {
+  height: 140px;
   position: relative;
 }
 
-.threshold-panel {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  border: 1px solid #e8e8e8;
+/* Threshold Card */
+.threshold-card {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
 }
 
-.threshold-panel h3 {
+.threshold-title {
   font-size: 16px;
-  color: #333;
+  font-weight: 600;
+  color: var(--gray-800);
   margin: 0 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.threshold-title svg {
+  color: var(--warning-500);
 }
 
 .threshold-grid {
@@ -663,50 +687,55 @@ function initNetChart(labels: string[], upload: number[], download: number[]) {
   gap: 16px;
 }
 
-.threshold-item {
+.threshold-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.threshold-item label {
+.threshold-field label {
   font-size: 13px;
-  color: #555;
+  font-weight: 500;
+  color: var(--gray-600);
 }
 
-.threshold-item input {
-  padding: 8px 12px;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
+.threshold-field input {
+  padding: 10px 14px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius);
   font-size: 14px;
+  color: var(--gray-800);
+  background: var(--gray-50);
+  transition: all var(--transition-fast);
   width: 100%;
   box-sizing: border-box;
 }
 
-.threshold-item input:focus {
+.threshold-field input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary-400);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px var(--primary-100);
 }
 
 @media (max-width: 768px) {
+  .monitor-page {
+    padding: 16px;
+  }
+
   .metrics-grid {
     grid-template-columns: 1fr;
   }
 
-  .monitor-header {
+  .page-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
 
-  .net-values {
+  .net-stats {
     flex-direction: column;
     gap: 12px;
-  }
-
-  .mem-info {
-    flex-direction: column;
-    gap: 8px;
   }
 }
 </style>

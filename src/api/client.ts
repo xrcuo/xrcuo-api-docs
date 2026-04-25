@@ -1,4 +1,4 @@
-import type { ApiEndpoint, ApiDocForm } from '@/types/api'
+import type { ApiDocForm } from '@/types/api'
 
 const BASE_URL = ''
 

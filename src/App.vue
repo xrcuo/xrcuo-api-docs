@@ -55,6 +55,86 @@ import { RouterView } from 'vue-router'
 </template>
 
 <style>
+:root {
+  /* Primary Colors - Modern Indigo */
+  --primary-50: #eef2ff;
+  --primary-100: #e0e7ff;
+  --primary-200: #c7d2fe;
+  --primary-300: #a5b4fc;
+  --primary-400: #818cf8;
+  --primary-500: #6366f1;
+  --primary-600: #4f46e5;
+  --primary-700: #4338ca;
+  --primary-800: #3730a3;
+  --primary-900: #312e81;
+
+  /* Neutral Colors - Slate */
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+
+  /* Semantic Colors */
+  --success-50: #f0fdf4;
+  --success-100: #dcfce7;
+  --success-500: #22c55e;
+  --success-600: #16a34a;
+  --warning-50: #fffbeb;
+  --warning-100: #fef3c7;
+  --warning-500: #f59e0b;
+  --warning-600: #d97706;
+  --error-50: #fef2f2;
+  --error-100: #fee2e2;
+  --error-500: #ef4444;
+  --error-600: #dc2626;
+  --info-50: #eff6ff;
+  --info-100: #dbeafe;
+  --info-500: #3b82f6;
+  --info-600: #2563eb;
+
+  /* Method Colors */
+  --method-get: #0ea5e9;
+  --method-get-bg: #e0f2fe;
+  --method-post: #10b981;
+  --method-post-bg: #d1fae5;
+  --method-put: #f59e0b;
+  --method-put-bg: #fef3c7;
+  --method-delete: #ef4444;
+  --method-delete-bg: #fee2e2;
+  --method-patch: #8b5cf6;
+  --method-patch-bg: #ede9fe;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* Border Radius */
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition: 200ms ease;
+  --transition-slow: 300ms ease;
+
+  /* Layout */
+  --sidebar-width: 260px;
+  --header-height: 64px;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -62,12 +142,12 @@ import { RouterView } from 'vue-router'
 }
 
 body {
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: #f5f7fa;
-  color: #333;
-  line-height: 1.5;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--gray-50);
+  color: var(--gray-800);
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .app {
@@ -80,50 +160,62 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  height: 60px;
-  background: #ffffff;
-  border-bottom: 1px solid #e8e8e8;
+  padding: 0 32px;
+  height: var(--header-height);
+  background: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid var(--gray-200);
   position: sticky;
   top: 0;
   z-index: 100;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .nav-brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #4a90d9;
+  color: var(--primary-600);
 }
 
 .nav-logo {
-  color: #4a90d9;
+  color: var(--primary-600);
 }
 
 .nav-title {
   font-size: 18px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--gray-900);
+  letter-spacing: -0.025em;
 }
 
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
 }
 
 .nav-link {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #555;
+  color: var(--gray-600);
   text-decoration: none;
   font-size: 14px;
-  transition: color 0.2s;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  transition: all var(--transition-fast);
 }
 
 .nav-link:hover {
-  color: #4a90d9;
+  color: var(--primary-600);
+  background: var(--primary-50);
+}
+
+.nav-link.router-link-active {
+  color: var(--primary-600);
+  background: var(--primary-50);
 }
 
 .main-content {
@@ -132,17 +224,17 @@ body {
 
 .app-footer {
   text-align: center;
-  padding: 20px;
-  color: #999;
+  padding: 24px;
+  color: var(--gray-400);
   font-size: 13px;
-  border-top: 1px solid #e8e8e8;
+  border-top: 1px solid var(--gray-200);
   background: #ffffff;
 }
 
 @media (max-width: 768px) {
   .top-nav {
     padding: 0 16px;
-    height: 52px;
+    height: 56px;
   }
 
   .nav-title {
