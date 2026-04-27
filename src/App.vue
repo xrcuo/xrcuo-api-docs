@@ -1,5 +1,18 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { icpApi } from '@/api/client'
+
+const icpText = ref('')
+
+onMounted(async () => {
+  try {
+    const data = await icpApi.get()
+    icpText.value = data.value || ''
+  } catch (e) {
+    console.error('获取备案号失败', e)
+  }
+})
 </script>
 
 <template>
@@ -50,6 +63,7 @@ import { RouterView } from 'vue-router'
 
     <footer class="app-footer">
       <p>API 接口文档中心</p>
+      <p v-if="icpText" class="icp-text">{{ icpText }}</p>
     </footer>
   </div>
 </template>
@@ -247,6 +261,12 @@ body {
   font-size: 13px;
   border-top: 1px solid var(--gray-200);
   background: #ffffff;
+}
+
+.app-footer .icp-text {
+  margin-top: 4px;
+  color: var(--gray-500);
+  font-size: 12px;
 }
 
 @media (max-width: 768px) {

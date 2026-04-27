@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { apiDocApi } from '@/api/client'
+import { apiDocApi, icpApi } from '@/api/client'
 import ApiDocEditor from '@/components/ApiDocEditor.vue'
 import SystemMonitor from '@/components/SystemMonitor.vue'
 import type { ApiDocForm, ApiEndpoint } from '@/types/api'
@@ -10,7 +10,7 @@ import type { ApiDocForm, ApiEndpoint } from '@/types/api'
 const router = useRouter()
 const authStore = useAuthStore()
 
-const activeTab = ref<'docs' | 'monitor' | 'password'>('docs')
+const activeTab = ref<'docs' | 'monitor' | 'icp' | 'password'>('docs')
 const docs = ref<ApiEndpoint[]>([])
 const loading = ref(false)
 const error = ref('')
@@ -24,12 +24,18 @@ const confirmPassword = ref('')
 const passwordError = ref('')
 const passwordSuccess = ref('')
 
+const icpValue = ref('')
+const icpLoading = ref(false)
+const icpError = ref('')
+const icpSuccess = ref('')
+
 onMounted(async () => {
   if (!authStore.isLoggedIn) {
     router.push('/login')
     return
   }
   await loadDocs()
+  await loadICP()
 })
 
 function createEmptyDoc(): ApiDocForm {
@@ -83,6 +89,15 @@ async function loadDocs() {
     }
   } finally {
     loading.value = false
+  }
+}
+
+async function loadICP() {
+  try {
+    const data = await icpApi.get()
+    icpValue.value = data.value || ''
+  } catch (e: unknown) {
+    console.error('加载备案号失败:', e)
   }
 }
 
@@ -182,6 +197,21 @@ async function handleChangePassword() {
   }
 }
 
+async function handleSaveICP() {
+  icpError.value = ''
+  icpSuccess.value = ''
+  icpLoading.value = true
+
+  try {
+    await icpApi.set(icpValue.value)
+    icpSuccess.value = '备案号保存成功'
+  } catch (e: unknown) {
+    icpError.value = e instanceof Error ? e.message : '保存失败'
+  } finally {
+    icpLoading.value = false
+  }
+}
+
 function logout() {
   authStore.logout()
   router.push('/login')
@@ -234,6 +264,20 @@ function logout() {
             </svg>
           </span>
           <span class="nav-label">系统监控</span>
+        </button>
+        <button
+          class="nav-item"
+          :class="{ active: activeTab === 'icp' }"
+          @click="activeTab = 'icp'"
+        >
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <line x1="3" y1="9" x2="21" y2="9"/>
+              <line x1="9" y1="21" x2="9" y2="9"/>
+            </svg>
+          </span>
+          <span class="nav-label">备案号管理</span>
         </button>
         <button
           class="nav-item"
@@ -346,6 +390,32 @@ function logout() {
           </div>
         </div>
         <SystemMonitor />
+      </div>
+
+      <div v-if="activeTab === 'icp'" class="tab-content">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">备案号管理</h1>
+            <p class="page-desc">设置网站底部展示的备案号信息</p>
+          </div>
+        </div>
+        <div class="form-card">
+          <form class="form-stack" @submit.prevent="handleSaveICP">
+            <div class="form-field">
+              <label>备案号</label>
+              <input
+                v-model="icpValue"
+                type="text"
+                placeholder="例如：京ICP备12345678号"
+              />
+            </div>
+            <div v-if="icpError" class="alert alert-error">{{ icpError }}</div>
+            <div v-if="icpSuccess" class="alert alert-success">{{ icpSuccess }}</div>
+            <button type="submit" class="btn-primary btn-full" :disabled="icpLoading">
+              {{ icpLoading ? '保存中...' : '保存备案号' }}
+            </button>
+          </form>
+        </div>
       </div>
 
       <div v-if="activeTab === 'password'" class="tab-content">
@@ -584,10 +654,15 @@ function logout() {
   box-shadow: 0 1px 3px rgba(79, 70, 229, 0.3);
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background: var(--primary-700);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .btn-primary svg {

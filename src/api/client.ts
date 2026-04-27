@@ -141,3 +141,12 @@ export const monitorApi = {
   getCurrent: () => request<SystemMetrics>('/admin/metrics'),
   getHistory: () => request<SystemMetrics[]>('/admin/metrics/history'),
 }
+
+export const icpApi = {
+  get: () => request<{ value: string }>('/admin/icp'),
+  set: (value: string) =>
+    request<null>('/admin/icp', {
+      method: 'POST',
+      body: JSON.stringify({ value }),
+    }),
+}
