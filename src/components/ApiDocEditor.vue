@@ -103,6 +103,15 @@ function addTag() {
 function removeTag(index: number) {
   form.value.tags.splice(index, 1)
 }
+
+function initRequestBody() {
+  form.value.requestBody = {
+    contentType: 'application/json',
+    description: '',
+    schema: [],
+    example: '',
+  }
+}
 </script>
 
 <template>
@@ -230,30 +239,36 @@ function removeTag(index: number) {
 
         <!-- 请求体 -->
         <div v-if="activeSection === 'body'" class="section">
-          <div class="form-group">
-            <label>Content-Type</label>
-            <input
-              v-model="form.requestBody!.contentType"
-              class="form-input"
-              placeholder="application/json"
-            />
+          <div v-if="form.requestBody" class="body-content">
+            <div class="form-group">
+              <label>Content-Type</label>
+              <input
+                v-model="form.requestBody.contentType"
+                class="form-input"
+                placeholder="application/json"
+              />
+            </div>
+            <div class="form-group">
+              <label>描述</label>
+              <input
+                v-model="form.requestBody.description"
+                class="form-input"
+                placeholder="请求体描述"
+              />
+            </div>
+            <div class="form-group">
+              <label>请求示例</label>
+              <textarea
+                v-model="form.requestBody.example"
+                class="form-input code"
+                rows="6"
+                placeholder="JSON 示例..."
+              ></textarea>
+            </div>
           </div>
-          <div class="form-group">
-            <label>描述</label>
-            <input
-              v-model="form.requestBody!.description"
-              class="form-input"
-              placeholder="请求体描述"
-            />
-          </div>
-          <div class="form-group">
-            <label>请求示例</label>
-            <textarea
-              v-model="form.requestBody!.example"
-              class="form-input code"
-              rows="6"
-              placeholder="JSON 示例..."
-            ></textarea>
+          <div v-else class="empty-hint">
+            <p>当前接口暂无请求体定义</p>
+            <button class="btn-add" @click="initRequestBody">+ 添加请求体</button>
           </div>
         </div>
 
