@@ -4,13 +4,23 @@ import { ref, onMounted } from 'vue'
 import { icpApi } from '@/api/client'
 
 const icpText = ref('')
+const loadError = ref('')
+
+// HTML转义函数，防止XSS攻击
+function escapeHtml(text: string): string {
+  const div = document.createElement('div')
+  div.textContent = text
+  return div.innerHTML
+}
 
 onMounted(async () => {
   try {
     const data = await icpApi.get()
-    icpText.value = data.value || ''
+    // 对备案号进行HTML转义，防止XSS
+    icpText.value = data.value ? escapeHtml(data.value) : ''
   } catch (e) {
     console.error('获取备案号失败', e)
+    loadError.value = '备案号加载失败'
   }
 })
 </script>
@@ -46,7 +56,7 @@ onMounted(async () => {
       </div>
       <div class="nav-links">
         <router-link to="/admin" class="nav-link">管理后台</router-link>
-        <a href="https://github.com" target="_blank" rel="noopener" class="nav-link">
+        <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="nav-link">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
             <path
               d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
@@ -63,7 +73,8 @@ onMounted(async () => {
 
     <footer class="app-footer">
       <p>API 接口文档中心</p>
-      <p v-if="icpText" class="icp-text">{{ icpText }}</p>
+      <p v-if="icpText" class="icp-text" v-html="icpText"></p>
+      <p v-else-if="loadError" class="icp-error">{{ loadError }}</p>
     </footer>
   </div>
 </template>
@@ -266,6 +277,12 @@ body {
 .app-footer .icp-text {
   margin-top: 4px;
   color: var(--gray-500);
+  font-size: 12px;
+}
+
+.app-footer .icp-error {
+  margin-top: 4px;
+  color: var(--error-400);
   font-size: 12px;
 }
 

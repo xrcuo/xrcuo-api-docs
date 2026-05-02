@@ -29,6 +29,10 @@ const icpLoading = ref(false)
 const icpError = ref('')
 const icpSuccess = ref('')
 
+// ICP 表单验证常量
+const ICP_MIN_LENGTH = 5
+const ICP_MAX_LENGTH = 100
+
 onMounted(async () => {
   if (!authStore.isLoggedIn) {
     router.push('/login')
@@ -197,16 +201,48 @@ async function handleChangePassword() {
   }
 }
 
+function validateICP(value: string): { valid: boolean; message?: string } {
+  const trimmed = value.trim()
+  
+  if (!trimmed) {
+    return { valid: false, message: '备案号不能为空' }
+  }
+  
+  const length = Array.from(trimmed).length
+  if (length < ICP_MIN_LENGTH) {
+    return { valid: false, message: `备案号长度不能少于 ${ICP_MIN_LENGTH} 个字符` }
+  }
+  if (length > ICP_MAX_LENGTH) {
+    return { valid: false, message: `备案号长度不能超过 ${ICP_MAX_LENGTH} 个字符` }
+  }
+  
+  return { valid: true }
+}
+
 async function handleSaveICP() {
   icpError.value = ''
   icpSuccess.value = ''
+  
+  // 客户端验证
+  const validation = validateICP(icpValue.value)
+  if (!validation.valid) {
+    icpError.value = validation.message || '验证失败'
+    return
+  }
+  
   icpLoading.value = true
 
   try {
-    await icpApi.set(icpValue.value)
+    const result = await icpApi.set(icpValue.value.trim())
+    icpValue.value = result.value
     icpSuccess.value = '备案号保存成功'
+    
+    // 3秒后清除成功提示
+    setTimeout(() => {
+      icpSuccess.value = ''
+    }, 3000)
   } catch (e: unknown) {
-    icpError.value = e instanceof Error ? e.message : '保存失败'
+    icpError.value = e instanceof Error ? e.message : '保存失败，请稍后重试'
   } finally {
     icpLoading.value = false
   }
@@ -406,8 +442,12 @@ function logout() {
               <input
                 v-model="icpValue"
                 type="text"
+                :maxlength="ICP_MAX_LENGTH"
                 placeholder="例如：京ICP备12345678号"
               />
+              <span class="field-hint">
+                长度限制：{{ ICP_MIN_LENGTH }}-{{ ICP_MAX_LENGTH }} 个字符
+              </span>
             </div>
             <div v-if="icpError" class="alert alert-error">{{ icpError }}</div>
             <div v-if="icpSuccess" class="alert alert-success">{{ icpSuccess }}</div>
@@ -901,6 +941,12 @@ function logout() {
 
 .form-field input::placeholder {
   color: var(--gray-400);
+}
+
+.field-hint {
+  font-size: 12px;
+  color: var(--gray-400);
+  margin-top: 2px;
 }
 
 .alert {
